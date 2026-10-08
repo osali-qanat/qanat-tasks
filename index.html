@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صندوق قنات - ورود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>body { font-family: 'Vazirmatn', sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="p-4 md:p-8 relative min-h-screen">
+
+    <!-- این کادر برای نمایش پیام‌های خطا و موفقیت طراحی شده است -->
+    <div id="message-box" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 text-sm font-bold transition-all duration-300 opacity-0 translate-y-[-1rem]">
+        <!-- متن پیام اینجا قرار می‌گیرد -->
+    </div>
+
+    <div id="login-container" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md mt-20 border border-gray-200">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">ورود به سیستم صندوق قنات</h2>
+        </div>
+        <div class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل (نام کاربری)</label>
+                <!-- ایمیل شما به صورت پیش‌فرض در اینجا قرار داده شده -->
+                <input type="email" id="email-input" class="w-full border border-gray-300 rounded-lg p-3 text-left focus:ring-2 focus:ring-blue-500 outline-none" dir="ltr" value="osali5000@gmail.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور</label>
+                <input type="password" id="password-input" class="w-full border border-gray-300 rounded-lg p-3 text-left focus:ring-2 focus:ring-blue-500 outline-none" dir="ltr" placeholder="رمز عبور خود را وارد کنید">
+            </div>
+            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white font-bold rounded-lg p-3 hover:bg-blue-700 transition shadow-sm">ورود به پنل</button>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="hidden max-w-5xl mx-auto">
+        <header class="bg-white p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">داشبورد مدیریت کارهای صندوق</h1>
+                <p class="text-gray-500 mt-2 text-sm font-mono" id="user-info-text" dir="ltr">در حال بارگذاری...</p>
+            </div>
+            <button onclick="logout()" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-lg hover:bg-red-100 transition font-medium text-sm border border-red-100 flex items-center gap-2">
+                خروج از حساب
+            </button>
+        </header>
+        
+        <div class="bg-white p-12 rounded-xl shadow-sm text-center border border-gray-100 flex flex-col items-center justify-center">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl text-green-600 font-bold mb-4">شما با موفقیت وارد شدید!</h2>
+            <p class="text-gray-600 text-lg max-w-lg leading-relaxed">ارتباط با دیتابیس Supabase کاملاً برقرار است. حالا می‌توانیم لیست وظایف را به این صفحه متصل کنیم.</p>
+        </div>
+    </div>
+
+    <script>
+        // نمایش پیام اختصاصی روی صفحه
+        function showMessage(msg, isError = true) {
+            const box = document.getElementById('message-box');
+            box.innerText = msg;
+            box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 text-sm font-bold transition-all duration-300 opacity-100 translate-y-0 ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
+            box.classList.remove('hidden');
+            
+            // مخفی کردن پیام بعد از 4 ثانیه
+            setTimeout(() => {
+                box.classList.remove('opacity-100', 'translate-y-0');
+                box.classList.add('opacity-0', 'translate-y-[-1rem]');
+                setTimeout(() => box.classList.add('hidden'), 300);
+            }, 4000);
+        }
+
+        // جایگذاری لینک و کلید واقعی دیتابیس شما
+        const SUPABASE_URL = 'https://fsbfdyipycoeykmhiaox.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh';
+        
+        let supabase;
+
+        // بررسی اینکه آیا کتابخانه سوپابیس مسدود شده است (نیاز به VPN)
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.supabase === 'undefined') {
+                showMessage('خطا: ارتباط با سرور مسدود است. لطفاً فیلترشکن (VPN) خود را روشن کرده و صفحه را رفرش کنید.', true);
+            } else {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                checkSession();
+            }
+        });
+
+        async function login() {
+            if (!supabase) {
+                showMessage('اتصال با دیتابیس برقرار نیست. لطفاً VPN خود را روشن کرده و صفحه را رفرش کنید.', true);
+                return;
+            }
+            
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('password-input').value;
+            const btn = document.getElementById('login-btn');
+
+            if (!email || !password) {
+                showMessage('خطا: لطفاً ایمیل و رمز عبور را وارد کنید!');
+                return;
+            }
+
+            btn.innerHTML = '<span class="animate-pulse">در حال بررسی...</span>';
+            btn.disabled = true;
+
+            try {
+                // ارسال درخواست لاگین به سرور سوپابیس
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        showMessage('خطا: ایمیل یا رمز عبور اشتباه است!');
+                    } else if (error.message.includes('Email not confirmed')) {
+                        showMessage('خطا: ایمیل تایید نشده است. لطفا تنظیمات Supabase را چک کنید.');
+                    } else {
+                        showMessage('خطا در ورود: ' + error.message);
+                    }
+                } else {
+                    showMessage('با موفقیت وارد شدید', false);
+                    showDashboard(data.user);
+                }
+            } catch (err) {
+                showMessage('خطای ارتباط با سرور رخ داد.');
+            } finally {
+                btn.innerText = 'ورود به پنل';
+                btn.disabled = false;
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            showMessage('از حساب خارج شدید', false);
+            showLogin();
+        }
+
+        // بررسی اینکه آیا قبلا لاگین کرده‌ایم یا خیر
+        async function checkSession() {
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (data && data.session) {
+                    showDashboard(data.session.user);
+                } else {
+                    showLogin();
+                }
+            } catch (err) {
+                console.error("Session check error:", err);
+            }
+        }
+
+        function showDashboard(user) {
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            document.getElementById('user-info-text').innerText = user.email;
+        }
+
+        function showLogin() {
+            document.getElementById('dashboard-container').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+        }
+
+        // بررسی نشست کاربر به محض باز شدن صفحه (این بخش به بالا منتقل شد)
+    </script>
+</body>
+</html>
