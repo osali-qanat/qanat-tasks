@@ -19,29 +19,35 @@
 
     <div id="toast-message" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[100] text-sm font-bold transition-all duration-300"></div>
 
-    <div id="auth-screen" class="max-w-md mx-auto mt-20">
+    <div id="auth-screen" class="max-w-md mx-auto mt-16">
         <div class="glass-panel p-8 rounded-3xl shadow-xl border border-slate-100">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-200 transform rotate-3">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200 transform rotate-3">
                     <svg class="w-8 h-8 text-white -rotate-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
                 <h2 class="text-2xl font-black text-slate-800">صندوق قرض‌الحسنه قنات</h2>
-                <p class="text-slate-500 text-sm mt-2">سیستم مدیریت وظایف و شبیه‌ساز مالی تیم</p>
+                <p class="text-slate-500 text-sm mt-1">سیستم مدیریت وظایف و شبیه‌ساز مالی تیم</p>
             </div>
             
-            <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
+            <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">ایمیل سازمانی (نام کاربری)</label>
-                    <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all" dir="ltr" value="osali5000@gmail.com" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">ایمیل سازمانی (نام کاربری)</label>
+                    <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all text-sm" dir="ltr" value="osali5000@gmail.com" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1.5">رمز عبور</label>
-                    <input type="password" id="password" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all" dir="ltr" placeholder="رمز عبور خود را وارد کنید" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">رمز عبور</label>
+                    <input type="password" id="password" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all text-sm" dir="ltr" placeholder="رمز عبور خود را وارد کنید" required>
                 </div>
-                <button type="submit" id="login-btn" class="w-full bg-slate-900 text-white font-bold rounded-xl p-3.5 hover:bg-emerald-600 transition-all duration-300 shadow-md">
+                <button type="submit" id="login-btn" class="w-full bg-slate-900 text-white font-bold rounded-xl p-3.5 hover:bg-emerald-600 transition-all duration-300 shadow-md text-sm">
                     ورود به پنل کاربری
                 </button>
             </form>
+
+            <!-- On-screen Debug Log Box to see errors explicitly -->
+            <div class="mt-6 p-3 bg-slate-900 text-emerald-400 rounded-xl text-xs font-mono max-h-36 overflow-y-auto" id="debug-box">
+                <span class="text-slate-400"># گزارش وضعیت سیستم:</span><br>
+                آماده برای اتصال و احراز هویت...
+            </div>
         </div>
     </div>
 
@@ -142,10 +148,16 @@
     </div>
 
     <script>
-        // اتصال به پایگاه داده Supabase
+        // اتصال به پایگاه داده Supabase با کلید publishable جدید
         const SUPABASE_URL = 'https://fsbfdyipycoeykmhiaox.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function logDebug(msg) {
+            const box = document.getElementById('debug-box');
+            box.innerHTML += `<br>• ${msg}`;
+            box.scrollTop = box.scrollHeight;
+        }
 
         // سیستم نمایش پیام Toast
         function showToast(message, type = 'error') {
@@ -173,11 +185,13 @@
 
             if (!email || !password) {
                 showToast('لطفاً ایمیل و رمز عبور را وارد کنید!');
+                logDebug('خطا: فیلدها خالی هستند.');
                 return;
             }
 
             btn.innerHTML = '<span class="animate-pulse">در حال بررسی...</span>';
             btn.disabled = true;
+            logDebug(`ارسال درخواست ورود برای: ${email}`);
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -187,10 +201,12 @@
 
                 if (error) throw error;
                 
+                logDebug('ورود با موفقیت انجام شد!');
                 showToast('ورود موفقیت‌آمیز بود', 'success');
                 loadDashboard(data.user);
 
             } catch (error) {
+                logDebug('خطای سوپابیس: ' + error.message);
                 if (error.message.includes('Invalid login credentials')) {
                     showToast('ایمیل یا رمز عبور اشتباه است!');
                 } else if (error.message.includes('Failed to fetch')) {
@@ -210,17 +226,22 @@
             document.getElementById('main-dashboard').classList.add('hidden');
             document.getElementById('auth-screen').classList.remove('hidden');
             showToast('از حساب خارج شدید', 'success');
+            logDebug('کاربر خارج شد.');
         }
 
         // بررسی نشست فعال
         window.onload = async function() {
+            logDebug('صفحه لود شد، بررسی سشن...');
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session && session.user) {
+                    logDebug(`سشن فعال پیدا شد: ${session.user.email}`);
                     loadDashboard(session.user);
+                } else {
+                    logDebug('هیچ سشن فعالی یافت نشد.');
                 }
             } catch(e) {
-                console.error(e);
+                logDebug('خطا در بررسی سشن: ' + e.message);
             }
         };
 
