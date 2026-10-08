@@ -3,169 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صندوق قنات - ورود</title>
+    <title>مدیریت و شبیه‌ساز صندوق قنات</title>
+    
+    <!-- فونت و استایل‌های اصلی -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    
+    <!-- کتابخانه Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>body { font-family: 'Vazirmatn', sans-serif; background-color: #f3f4f6; }</style>
+    
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; }
+        .kanban-col { min-height: 300px; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="p-4 md:p-8 relative min-h-screen">
+<body class="p-4 md:p-6 text-slate-800">
 
-    <!-- این کادر برای نمایش پیام‌های خطا و موفقیت طراحی شده است -->
-    <div id="message-box" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 text-sm font-bold transition-all duration-300 opacity-0 translate-y-[-1rem]">
-        <!-- متن پیام اینجا قرار می‌گیرد -->
-    </div>
+    <!-- سیستم نمایش پیام و خطا -->
+    <div id="toast-message" class="hidden fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[100] text-sm font-bold transition-all duration-300"></div>
 
-    <div id="login-container" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md mt-20 border border-gray-200">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    <!-- صفحه لاگین -->
+    <div id="auth-screen" class="max-w-md mx-auto mt-20">
+        <div class="glass-panel p-8 rounded-3xl shadow-xl border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-200 transform rotate-3">
+                    <svg class="w-8 h-8 text-white -rotate-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800">صندوق قرض‌الحسنه قنات</h2>
+                <p class="text-slate-500 text-sm mt-2">جهت ورود به پنل مدیریت، اطلاعات خود را وارد کنید</p>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">ورود به سیستم صندوق قنات</h2>
-        </div>
-        <div class="space-y-5">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل (نام کاربری)</label>
-                <!-- ایمیل شما به صورت پیش‌فرض در اینجا قرار داده شده -->
-                <input type="email" id="email-input" class="w-full border border-gray-300 rounded-lg p-3 text-left focus:ring-2 focus:ring-blue-500 outline-none" dir="ltr" value="osali5000@gmail.com">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور</label>
-                <input type="password" id="password-input" class="w-full border border-gray-300 rounded-lg p-3 text-left focus:ring-2 focus:ring-blue-500 outline-none" dir="ltr" placeholder="رمز عبور خود را وارد کنید">
-            </div>
-            <button onclick="login()" id="login-btn" class="w-full bg-blue-600 text-white font-bold rounded-lg p-3 hover:bg-blue-700 transition shadow-sm">ورود به پنل</button>
-        </div>
-    </div>
-
-    <div id="dashboard-container" class="hidden max-w-5xl mx-auto">
-        <header class="bg-white p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">داشبورد مدیریت کارهای صندوق</h1>
-                <p class="text-gray-500 mt-2 text-sm font-mono" id="user-info-text" dir="ltr">در حال بارگذاری...</p>
-            </div>
-            <button onclick="logout()" class="bg-red-50 text-red-600 px-5 py-2.5 rounded-lg hover:bg-red-100 transition font-medium text-sm border border-red-100 flex items-center gap-2">
-                خروج از حساب
-            </button>
-        </header>
-        
-        <div class="bg-white p-12 rounded-xl shadow-sm text-center border border-gray-100 flex flex-col items-center justify-center">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h2 class="text-3xl text-green-600 font-bold mb-4">شما با موفقیت وارد شدید!</h2>
-            <p class="text-gray-600 text-lg max-w-lg leading-relaxed">ارتباط با دیتابیس Supabase کاملاً برقرار است. حالا می‌توانیم لیست وظایف را به این صفحه متصل کنیم.</p>
-        </div>
-    </div>
-
-    <script>
-        // نمایش پیام اختصاصی روی صفحه
-        function showMessage(msg, isError = true) {
-            const box = document.getElementById('message-box');
-            box.innerText = msg;
-            box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 text-sm font-bold transition-all duration-300 opacity-100 translate-y-0 ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
-            box.classList.remove('hidden');
             
-            // مخفی کردن پیام بعد از 4 ثانیه
+            <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">ایمیل سازمانی</label>
+                    <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all" dir="ltr" value="osali5000@gmail.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">رمز عبور</label>
+                    <input type="password" id="password" class="w-full border-2 border-slate-200 rounded-xl p-3 text-left focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all" dir="ltr" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="login-btn" class="w-full bg-slate-900 text-white font-bold rounded-xl p-3.5 hover:bg-emerald-600 transition-all duration-300 shadow-md">
+                    تایید و ورود به سیستم
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- داشبورد اصلی (مخفی در ابتدا) -->
+    <div id="main-dashboard" class="hidden max-w-7xl mx-auto space-y-6">
+        
+        <!-- هدر داشبورد -->
+        <header class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-bold text-xl">ق</div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800">پنل مدیریت و شبیه‌ساز صندوق</h1>
+                    <p class="text-slate-500 text-sm font-medium mt-1 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        متصل به پایگاه داده آنلاین
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 text-sm">
+                    <span class="text-slate-500">کاربر:</span>
+                    <span id="user-email-display" class="font-bold text-slate-800 ml-2" dir="ltr">...</span>
+                </div>
+                <button onclick="handleLogout()" class="bg-rose-50 text-rose-600 px-4 py-2 rounded-lg hover:bg-rose-100 transition font-bold text-sm border border-rose-100 flex items-center gap-2">
+                    خروج
+                </button>
+            </div>
+        </header>
+
+        <!-- بخش شبیه‌ساز (گرفته شده از کدهای ریکت شما اما با جاوا اسکریپت خالص) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- بورد کانبان (سمت راست) -->
+            <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">بورد انضباط پرداخت ماه‌ها</h2>
+                        <p class="text-xs text-slate-500 mt-1">تعداد ماه‌های فعال: <span id="total-months" class="font-bold text-emerald-600">۲۴</span> ماه</p>
+                    </div>
+                    <button onclick="alert('قابلیت افزودن دستی به زودی به دیتابیس متصل می‌شود.')" class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition">
+                        + ثبت ماه جدید
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- ستون ۱: به موقع -->
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 kanban-col">
+                        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <h3 class="font-bold text-sm text-slate-700">واریز به‌موقع (۵+ قطره)</h3>
+                        </div>
+                        <div id="col-ontime" class="space-y-2">
+                            <!-- کارت‌ها با JS تولید می‌شوند -->
+                        </div>
+                    </div>
+
+                    <!-- ستون ۲: تاخیر -->
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 kanban-col">
+                        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <h3 class="font-bold text-sm text-slate-700">با تأخیر (۱۰- قطره)</h3>
+                        </div>
+                        <div id="col-delayed" class="space-y-2"></div>
+                    </div>
+
+                    <!-- ستون ۳: عدم واریز -->
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 kanban-col">
+                        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <h3 class="font-bold text-sm text-slate-700">عدم واریز (۱۵- قطره)</h3>
+                        </div>
+                        <div id="col-missed" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- کارنامه اعتباری و محاسبه‌گر وام (سمت چپ) -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- محاسبه گر هوشمند -->
+                <div class="bg-slate-900 rounded-2xl p-5 shadow-lg text-white">
+                    <h3 class="font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        محاسبه‌گر هوشمند وام
+                    </h3>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+                            <span class="text-slate-400">موجودی کل (سرمایه):</span>
+                            <span class="font-bold">۵,۶۰۰,۰۰۰ تومان</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+                            <span class="text-slate-400">امتیاز نهایی شبنم:</span>
+                            <span class="font-bold text-emerald-400">۷۸۲ شبنم</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-700">
+                            <span class="text-slate-400">سطح اعتباری:</span>
+                            <span class="bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded text-xs font-bold border border-indigo-500/50">قنات (سقف عالی)</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-emerald-900/50 rounded-xl border border-emerald-500/30 text-center">
+                        <span class="block text-emerald-200 text-xs mb-1">حداکثر وام مصوب پرداختی</span>
+                        <span class="block text-3xl font-black text-white tracking-tight">۱۰,۰۰۰,۰۰۰<span class="text-sm font-normal text-emerald-400 mr-1">تومان</span></span>
+                    </div>
+                </div>
+
+                <!-- کارنامه جزئیات -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">ریشه امتیازات (تجمعی)</h3>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li class="flex justify-between"><span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>تداوم حضور</span> <strong class="text-slate-900">+۲۴</strong></li>
+                        <li class="flex justify-between"><span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>انضباط روز واریز</span> <strong class="text-slate-900">+۱۲۰</strong></li>
+                        <li class="flex justify-between"><span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>معرفی عضو جدید</span> <strong class="text-slate-900">+۱۰</strong></li>
+                        <li class="flex justify-between"><span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>پس‌انداز پایه</span> <strong class="text-slate-900">+۶۰۰</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- کدهای منطق سیستم -->
+    <script>
+        /* ۱. تنظیمات پایگاه داده */
+        const SUPABASE_URL = 'https://fsbfdyipycoeykmhiaox.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        /* ۲. توابع نمایش پیام (Toast) */
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast-message');
+            toast.innerText = message;
+            
+            if(type === 'error') {
+                toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[100] text-sm font-bold transition-all duration-300 opacity-100 translate-y-0 bg-rose-600 text-white border-2 border-rose-800';
+            } else {
+                toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[100] text-sm font-bold transition-all duration-300 opacity-100 translate-y-0 bg-emerald-600 text-white border-2 border-emerald-800';
+            }
+            
             setTimeout(() => {
-                box.classList.remove('opacity-100', 'translate-y-0');
-                box.classList.add('opacity-0', 'translate-y-[-1rem]');
-                setTimeout(() => box.classList.add('hidden'), 300);
+                toast.classList.replace('opacity-100', 'opacity-0');
+                toast.classList.replace('translate-y-0', 'translate-y-[-2rem]');
+                setTimeout(() => toast.classList.add('hidden'), 300);
             }, 4000);
         }
 
-        // جایگذاری لینک و کلید واقعی دیتابیس شما
-        const SUPABASE_URL = 'https://fsbfdyipycoeykmhiaox.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh';
-        
-        let supabase;
-
-        // بررسی اینکه آیا کتابخانه سوپابیس مسدود شده است (نیاز به VPN)
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.supabase === 'undefined') {
-                showMessage('خطا: ارتباط با سرور مسدود است. لطفاً فیلترشکن (VPN) خود را روشن کرده و صفحه را رفرش کنید.', true);
-            } else {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                checkSession();
-            }
-        });
-
-        async function login() {
-            if (!supabase) {
-                showMessage('اتصال با دیتابیس برقرار نیست. لطفاً VPN خود را روشن کرده و صفحه را رفرش کنید.', true);
-                return;
-            }
-            
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('password-input').value;
+        /* ۳. سیستم احراز هویت (ورود/خروج) */
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             const btn = document.getElementById('login-btn');
 
-            if (!email || !password) {
-                showMessage('خطا: لطفاً ایمیل و رمز عبور را وارد کنید!');
-                return;
-            }
-
-            btn.innerHTML = '<span class="animate-pulse">در حال بررسی...</span>';
+            // تغییر ظاهر دکمه
+            btn.innerHTML = '<span class="animate-pulse">در حال ارتباط با سرور...</span>';
             btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
 
             try {
-                // ارسال درخواست لاگین به سرور سوپابیس
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password,
                 });
 
                 if (error) {
-                    if (error.message.includes('Invalid login credentials')) {
-                        showMessage('خطا: ایمیل یا رمز عبور اشتباه است!');
-                    } else if (error.message.includes('Email not confirmed')) {
-                        showMessage('خطا: ایمیل تایید نشده است. لطفا تنظیمات Supabase را چک کنید.');
-                    } else {
-                        showMessage('خطا در ورود: ' + error.message);
-                    }
-                } else {
-                    showMessage('با موفقیت وارد شدید', false);
-                    showDashboard(data.user);
+                    throw error;
                 }
-            } catch (err) {
-                showMessage('خطای ارتباط با سرور رخ داد.');
+                
+                // ورود موفق
+                showToast('ورود با موفقیت انجام شد!', 'success');
+                loadDashboard(data.user);
+
+            } catch (error) {
+                // خطایابی دقیق
+                if (error.message.includes('Invalid login credentials')) {
+                    showToast('ایمیل یا رمز عبور اشتباه است!');
+                } else if (error.message.includes('Email not confirmed')) {
+                    showToast('ایمیل تایید نشده است. به پنل سوپابیس بروید.');
+                } else if (error.message.includes('Failed to fetch')) {
+                    showToast('اینترنت قطع است یا سوپابیس فیلتر شده (VPN روشن کنید).');
+                } else {
+                    showToast('خطا: ' + error.message);
+                }
             } finally {
-                btn.innerText = 'ورود به پنل';
+                // برگرداندن دکمه به حالت اول
+                btn.innerHTML = 'تایید و ورود به سیستم';
                 btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
             }
         }
 
-        async function logout() {
+        async function handleLogout() {
             await supabase.auth.signOut();
-            showMessage('از حساب خارج شدید', false);
-            showLogin();
+            document.getElementById('main-dashboard').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            showToast('از سیستم خارج شدید', 'success');
         }
 
-        // بررسی اینکه آیا قبلا لاگین کرده‌ایم یا خیر
-        async function checkSession() {
-            try {
-                const { data, error } = await supabase.auth.getSession();
-                if (data && data.session) {
-                    showDashboard(data.session.user);
-                } else {
-                    showLogin();
+        /* ۴. بررسی سشن فعال در هنگام لود سایت */
+        window.onload = async function() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                loadDashboard(session.user);
+            }
+        };
+
+        /* ۵. بارگذاری داشبورد و داده‌های شبیه‌ساز */
+        function loadDashboard(user) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('user-email-display').innerText = user.email;
+            
+            renderSimulatorCards();
+        }
+
+        /* ۶. تولید کارت‌های شبیه‌ساز (گرفته شده از منطق ریکت شما) */
+        function renderSimulatorCards() {
+            const colOntime = document.getElementById('col-ontime');
+            const colDelayed = document.getElementById('col-delayed');
+            const colMissed = document.getElementById('col-missed');
+            
+            colOntime.innerHTML = ''; colDelayed.innerHTML = ''; colMissed.innerHTML = '';
+
+            // تولید ۲۴ کارت نمونه برای ماه ها
+            for(let i=1; i<=24; i++) {
+                let status = 'ontime'; // پیش‌فرض
+                let colorClass = 'border-emerald-200 bg-white hover:border-emerald-400';
+                let tagClass = 'bg-emerald-100 text-emerald-800';
+                let tagText = 'به‌موقع';
+
+                // شبیه‌سازی تاخیر و معوقه برای تنوع بصری
+                if(i === 7 || i === 15) {
+                    status = 'delayed';
+                    colorClass = 'border-amber-200 bg-white hover:border-amber-400';
+                    tagClass = 'bg-amber-100 text-amber-800';
+                    tagText = 'تأخیر';
+                } else if(i === 12) {
+                    status = 'missed';
+                    colorClass = 'border-rose-200 bg-white hover:border-rose-400';
+                    tagClass = 'bg-rose-100 text-rose-800';
+                    tagText = 'معوقه';
                 }
-            } catch (err) {
-                console.error("Session check error:", err);
+
+                const cardHTML = `
+                    <div class="p-3 rounded-xl border-2 ${colorClass} shadow-sm transition-all cursor-move">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-slate-800 text-xs">ماه ${i}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-md font-bold ${tagClass}">${tagText}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">واریزی: <b class="text-slate-800">${status==='missed' ? '۰' : '۲۰۰,۰۰۰'} ت</b></span>
+                        </div>
+                    </div>
+                `;
+
+                if(status === 'ontime') colOntime.innerHTML += cardHTML;
+                else if(status === 'delayed') colDelayed.innerHTML += cardHTML;
+                else colMissed.innerHTML += cardHTML;
             }
         }
-
-        function showDashboard(user) {
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('dashboard-container').classList.remove('hidden');
-            document.getElementById('user-info-text').innerText = user.email;
-        }
-
-        function showLogin() {
-            document.getElementById('dashboard-container').classList.add('hidden');
-            document.getElementById('login-container').classList.remove('hidden');
-        }
-
-        // بررسی نشست کاربر به محض باز شدن صفحه (این بخش به بالا منتقل شد)
     </script>
 </body>
 </html>
