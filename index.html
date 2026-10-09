@@ -295,13 +295,8 @@
 
         </div>
     </main>
-        // متغیرهای دیتابیس
-        let supaClient = null;
-        let tasksList = [];
-        let meetingsList = [];
-        let currentUser = null;
-        let realtimeSubscription = null;
 
+    <!-- STREAMING_CHUNK:Task Modal -->
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
@@ -377,6 +372,7 @@
         </div>
     </div>
 
+    <!-- STREAMING_CHUNK:Javascript Application Logic -->
     <script>
         // Init Jalali DatePicker
         jalaliDatepicker.startWatch({
@@ -466,7 +462,9 @@
         let supaClient = null;
         let tasksList = [];
         let filteredTasksList = []; // برای سرچ
+        let meetingsList = [];
         let currentUser = null;
+        let realtimeSubscription = null;
 
         // DB Connection
         const setupSupabase = () => {
@@ -498,7 +496,14 @@
                 showToast('خطا در تنظیمات پایگاه داده', 'error');
             }
         };
-        script.onerror = () => {
+
+        if (typeof window.supabase !== 'undefined') {
+            setupSupabase();
+        } else {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+            script.onload = setupSupabase;
+            script.onerror = () => {
                 const btn = document.getElementById('login-btn');
                 btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> خطا در شبکه (VPN را روشن کنید)';
                 btn.className = "w-full bg-rose-600 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg cursor-not-allowed text-sm";
@@ -506,10 +511,12 @@
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-rose-500";
             };
             document.head.appendChild(script);
+        }
 
         // جریان احراز هویت
         async function checkSession() {
             // به دلیل استفاده از onAuthStateChange این تابع فقط نقش پشتیبان را دارد
+            if(!supaClient) return;
             const { data: { session } } = await supaClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
@@ -564,7 +571,7 @@
             document.getElementById('main-dashboard').classList.remove('hidden');
             document.getElementById('main-dashboard').classList.add('flex');
             
-            document.getElementById('user-display-name').innerText = currentUser.email;
+            document.getElementById('user-display-name').innerText = currentUser.email.split('@')[0];
             
             fetchTasks();
             fetchMeetings();
@@ -586,12 +593,27 @@
                 .subscribe();
         }
 
+        // Helpers
+        function getInitials(name) {
+            if(!name || name === 'تخصیص نیافته' || name === 'بدون مسئول (آزاد)') return '?';
+            return name.substring(0, 1).toUpperCase();
+        }
+
+        function isOverdue(jalaliDateStr) {
+            if(!jalaliDateStr) return false;
+            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
+            let [y, m, d] = today.split('/');
+            if(m.length === 1) m = '0'+m;
+            if(d.length === 1) d = '0'+d;
+            return jalaliDateStr < `${y}/${m}/${d}`;
+        }
+
+        // --- توابع مدیریت وظایف (بورد کانبان) ---
         async function fetchTasks(showError = true) {
             try {
                 const { data, error } = await supaClient.from('tasks').select('*').order('created_at', { ascending: false });
                 
                 if (error) {
-                    console.error("Fetch Error:", error);
                     if (error.code === '42P01') throw new Error('جدول tasks وجود ندارد! کدهای SQL را اجرا کنید.');
                     if (error.code === '42501') throw new Error('شما اجازه دیدن کارها را ندارید (خطای RLS). کدهای SQL باید اجرا شوند.');
                     throw error;
@@ -605,90 +627,19 @@
             }
         }
 
-        // --- توابع مدیریت جلسات (تقویم) ---
-        async function fetchMeetings(showError = true) {
-            try {
-                const { data, error } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
-                if (error) throw error;
-                meetingsList = data || [];
-                renderMeetings();
-            } catch (err) {
-                if (showError) showToast('خطا در دریافت تقویم جلسات', 'error');
+        function filterTasks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query) {
+                filteredTasksList = [...tasksList];
+            } else {
+                filteredTasksList = tasksList.filter(t => 
+                    t.title.toLowerCase().includes(query) || 
+                    (t.description && t.description.toLowerCase().includes(query)) ||
+                    (t.assigned_to && t.assigned_to.toLowerCase().includes(query)) ||
+                    (t.category && t.category.toLowerCase().includes(query))
+                );
             }
-        }
-
-        async function submitMeeting() {
-            const title = document.getElementById('meetingTitle').value;
-            const date = document.getElementById('meetingDate').value;
-            const time = document.getElementById('meetingTime').value;
-            const location = document.getElementById('meetingLocation').value;
-            
-            const btn = document.getElementById('btn-submit-meeting');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال ثبت...';
-            btn.disabled = true;
-
-            try {
-                const newMeeting = { title, meeting_date: date, meeting_time: time, location };
-                const { error } = await supaClient.from('meetings').insert([newMeeting]);
-                if (error) throw error;
-                
-                showToast('جلسه با موفقیت در تقویم ثبت شد', 'success');
-                document.getElementById('meetingForm').reset();
-            } catch (err) {
-                showToast('خطا در ثبت. آیا کدهای SQL مربوط به meetings را اجرا کردید؟', 'error');
-            } finally {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-            }
-        }
-
-        async function deleteMeeting(id) {
-            if(!confirm('آیا از لغو این جلسه مطمئن هستید؟')) return;
-            try {
-                const { error } = await supaClient.from('meetings').delete().eq('id', id);
-                if (error) throw error;
-                showToast('جلسه لغو شد', 'info');
-            } catch (err) {
-                showToast('خطا در لغو جلسه', 'error');
-            }
-        }
-
-        function renderMeetings() {
-            const container = document.getElementById('meetings-list-container');
-            container.innerHTML = '';
-            
-            if (meetingsList.length === 0) {
-                container.innerHTML = '<div class="h-full w-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-regular fa-calendar-xmark text-5xl mb-4 opacity-50"></i><span class="text-sm font-bold">هیچ جلسه‌ای برای آینده تنظیم نشده است.</span></div>';
-                return;
-            }
-
-            meetingsList.forEach(m => {
-                let dateParts = m.meeting_date.split('/');
-                let day = dateParts.length === 3 ? dateParts[2] : '-';
-                let monthNum = dateParts.length === 3 ? parseInt(dateParts[1]) : 0;
-                let monthNames = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
-                let monthStr = (monthNum > 0 && monthNum <= 12) ? monthNames[monthNum - 1] : 'نامشخص';
-
-                let html = `
-                <div class="flex items-stretch gap-4 group animate-fade-up">
-                    <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
-                        <span class="text-xs font-bold">${monthStr}</span>
-                        <span class="text-2xl font-black -mt-1">${day}</span>
-                    </div>
-                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-black text-slate-800 text-sm md:text-base">${m.title}</h4>
-                            <button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1 bg-slate-50 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 shadow-sm" title="لغو جلسه"><i class="fa-solid fa-trash text-xs"></i></button>
-                        </div>
-                        <div class="flex flex-wrap gap-4 text-xs font-bold text-slate-500 mt-3">
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || 'مشخص نشده'}</span>
-                        </div>
-                    </div>
-                </div>`;
-                container.innerHTML += html;
-            });
+            renderKanban();
         }
 
         function renderKanban() {
@@ -733,13 +684,15 @@
                 
                 // کارت با قابلیت کلیک برای ویرایش
                 const cardHTML = `
-                    <div id="${task.id}" onclick="openTaskModal('${task.id}')" class="task-card bg-white p-3.5 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md hover:border-teal-400 relative group" draggable="true" ondragstart="drag(event)">
+                    <div id="${task.id}" class="task-card bg-white p-3.5 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md hover:border-teal-400 relative group" draggable="true" ondragstart="drag(event)">
+                        
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[9px] font-black px-2 py-0.5 rounded-md border ${pConfig.bg} ${pConfig.text} ${pConfig.border} flex items-center gap-1">
                                 <i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}
                             </span>
-                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                                <span class="text-[9px] text-slate-500 font-bold">${task.category || 'عمومی'}</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openTaskModal('${task.id}')" class="text-slate-300 hover:text-indigo-600 transition w-6 h-6 rounded flex items-center justify-center bg-slate-50 hover:bg-indigo-50 opacity-0 group-hover:opacity-100"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-rose-600 transition w-6 h-6 rounded flex items-center justify-center bg-slate-50 hover:bg-rose-50 opacity-0 group-hover:opacity-100"><i class="fa-solid fa-trash text-[10px]"></i></button>
                             </div>
                         </div>
                         
@@ -767,21 +720,6 @@
             document.getElementById('stat-todo').innerText = counts.todo; document.getElementById('badge-todo').innerText = counts.todo;
             document.getElementById('stat-inprogress').innerText = counts.in_progress; document.getElementById('badge-inprogress').innerText = counts.in_progress;
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
-        }
-
-        function filterTasks() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            if (!query) {
-                filteredTasksList = [...tasksList];
-            } else {
-                filteredTasksList = tasksList.filter(t => 
-                    t.title.toLowerCase().includes(query) || 
-                    (t.description && t.description.toLowerCase().includes(query)) ||
-                    (t.assigned_to && t.assigned_to.toLowerCase().includes(query)) ||
-                    (t.category && t.category.toLowerCase().includes(query))
-                );
-            }
-            renderKanban();
         }
 
         // گزارش عملکرد بر اساس اعضای تیم
@@ -846,6 +784,7 @@
             form.reset();
             
             if(taskId) {
+                // حالت ویرایش
                 const task = tasksList.find(t => t.id === taskId);
                 if(task) {
                     titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 ml-2"></i>ویرایش وظیفه';
@@ -861,6 +800,7 @@
                     document.getElementById('taskDueDate').value = task.due_date || '';
                 }
             } else {
+                // حالت ایجاد
                 titleEl.innerHTML = '<i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>تعریف وظیفه جدید';
                 btnText.innerText = 'ذخیره در پایگاه داده';
                 document.getElementById('taskIdHidden').value = '';
@@ -900,9 +840,6 @@
                     const { error } = await supaClient.from('tasks').update(taskData).eq('id', id);
                     if (error) throw error;
                     
-                    // Update local state
-                    const idx = tasksList.findIndex(t => t.id === id);
-                    if(idx > -1) tasksList[idx] = { ...tasksList[idx], ...taskData };
                     showToast('تغییرات با موفقیت ذخیره شد', 'success');
                 } else {
                     // Insert Mode
@@ -914,11 +851,11 @@
                         if (error.code === '42501') throw new Error('شما دسترسی ایجاد وظیفه ندارید. (RLS را بررسی کنید).');
                         throw error;
                     }
-                    if(data && data.length > 0) tasksList.unshift(data[0]);
                     showToast('وظیفه جدید به بورد تیم اضافه شد', 'success');
                 }
                 
-                filterTasks(); // Re-render
+                // در حالت Realtime خودکار لیست رفرش می‌شود اما برای اطمینان:
+                if (!realtimeSubscription) fetchTasks(); 
                 closeTaskModal();
                 if(!document.getElementById('view-performance').classList.contains('hidden')) generatePerformanceReport();
                 
@@ -928,6 +865,106 @@
                 icon.className = 'fa-solid fa-cloud-arrow-up';
                 btn.disabled = false;
             }
+        }
+
+        async function deleteTask(id) {
+            if(!confirm('آیا از حذف این کار مطمئن هستید؟')) return;
+            try {
+                const { error } = await supaClient.from('tasks').delete().eq('id', id);
+                if (error) throw error;
+                showToast('وظیفه از سیستم حذف شد', 'info');
+                if (!realtimeSubscription) fetchTasks();
+            } catch (err) {
+                showToast('خطا در حذف وظیفه (RLS)', 'error');
+            }
+        }
+
+        // --- توابع مدیریت جلسات (تقویم) ---
+        async function fetchMeetings(showError = true) {
+            try {
+                const { data, error } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
+                if (error) throw error;
+                meetingsList = data || [];
+                renderMeetings();
+            } catch (err) {
+                if (showError) showToast('خطا در دریافت تقویم جلسات', 'error');
+            }
+        }
+
+        async function submitMeeting() {
+            const title = document.getElementById('meetingTitle').value;
+            const date = document.getElementById('meetingDate').value;
+            const time = document.getElementById('meetingTime').value;
+            const location = document.getElementById('meetingLocation').value;
+            
+            const btn = document.getElementById('btn-submit-meeting');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال ثبت...';
+            btn.disabled = true;
+
+            try {
+                const newMeeting = { title, meeting_date: date, meeting_time: time, location };
+                const { error } = await supaClient.from('meetings').insert([newMeeting]);
+                if (error) throw error;
+                
+                showToast('جلسه با موفقیت در تقویم ثبت شد', 'success');
+                document.getElementById('meetingForm').reset();
+                if (!realtimeSubscription) fetchMeetings();
+            } catch (err) {
+                showToast('خطا در ثبت. آیا کدهای SQL مربوط به meetings را اجرا کردید؟', 'error');
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteMeeting(id) {
+            if(!confirm('آیا از لغو این جلسه مطمئن هستید؟')) return;
+            try {
+                const { error } = await supaClient.from('meetings').delete().eq('id', id);
+                if (error) throw error;
+                showToast('جلسه لغو شد', 'info');
+                if (!realtimeSubscription) fetchMeetings();
+            } catch (err) {
+                showToast('خطا در لغو جلسه', 'error');
+            }
+        }
+
+        function renderMeetings() {
+            const container = document.getElementById('meetings-list-container');
+            container.innerHTML = '';
+            
+            if (meetingsList.length === 0) {
+                container.innerHTML = '<div class="h-full w-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-regular fa-calendar-xmark text-5xl mb-4 opacity-50"></i><span class="text-sm font-bold">هیچ جلسه‌ای برای آینده تنظیم نشده است.</span></div>';
+                return;
+            }
+
+            meetingsList.forEach(m => {
+                let dateParts = m.meeting_date.split('/');
+                let day = dateParts.length === 3 ? dateParts[2] : '-';
+                let monthNum = dateParts.length === 3 ? parseInt(dateParts[1]) : 0;
+                let monthNames = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+                let monthStr = (monthNum > 0 && monthNum <= 12) ? monthNames[monthNum - 1] : 'نامشخص';
+
+                let html = `
+                <div class="flex items-stretch gap-4 group animate-fade-up">
+                    <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
+                        <span class="text-xs font-bold">${monthStr}</span>
+                        <span class="text-2xl font-black -mt-1">${day}</span>
+                    </div>
+                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-black text-slate-800 text-sm md:text-base">${m.title}</h4>
+                            <button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1 bg-slate-50 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 shadow-sm" title="لغو جلسه"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-xs font-bold text-slate-500 mt-3">
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || 'مشخص نشده'}</span>
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
         }
 
         // Drag & Drop Physics
