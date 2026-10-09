@@ -768,6 +768,21 @@
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
+        function filterTasks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query) {
+                filteredTasksList = [...tasksList];
+            } else {
+                filteredTasksList = tasksList.filter(t => 
+                    t.title.toLowerCase().includes(query) || 
+                    (t.description && t.description.toLowerCase().includes(query)) ||
+                    (t.assigned_to && t.assigned_to.toLowerCase().includes(query)) ||
+                    (t.category && t.category.toLowerCase().includes(query))
+                );
+            }
+            renderKanban();
+        }
+
         // گزارش عملکرد بر اساس اعضای تیم
         function generatePerformanceReport() {
             const tbody = document.getElementById('performance-table-body');
