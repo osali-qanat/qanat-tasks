@@ -252,73 +252,42 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                     <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
                         <h3 class="font-black text-slate-800 mb-6 border-b border-slate-100 pb-3"><i class="fa-regular fa-calendar-plus text-teal-600 ml-2"></i> زمان‌بندی جلسه جدید</h3>
-                        <form onsubmit="event.preventDefault(); showToast('جلسه با موفقیت در تقویم ثبت شد', 'success'); document.getElementById('meetingForm').reset();" id="meetingForm" class="space-y-4">
+                        <form onsubmit="event.preventDefault(); submitMeeting();" id="meetingForm" class="space-y-4">
                             <div>
                                 <label class="block text-xs font-black text-slate-700 mb-1.5">موضوع جلسه</label>
-                                <input type="text" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" placeholder="مثال: بررسی پرونده‌های وام" required>
+                                <input type="text" id="meetingTitle" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" placeholder="مثال: بررسی پرونده‌های وام" required>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">تاریخ جلسه (شمسی)</label>
                                 <div class="relative">
                                     <i class="fa-regular fa-calendar absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" data-jdp class="w-full border-2 border-slate-200 rounded-xl py-3 pr-4 pl-10 text-left focus:border-teal-500 outline-none font-black text-sm bg-slate-50 cursor-pointer" placeholder="انتخاب کنید..." readonly required>
+                                    <input type="text" id="meetingDate" data-jdp class="w-full border-2 border-slate-200 rounded-xl py-3 pr-4 pl-10 text-left focus:border-teal-500 outline-none font-black text-sm bg-slate-50 cursor-pointer" placeholder="انتخاب کنید..." readonly required>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1.5">ساعت شروع</label>
-                                    <input type="time" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center focus:border-teal-500 outline-none font-bold bg-slate-50" required>
+                                    <input type="time" id="meetingTime" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center focus:border-teal-500 outline-none font-bold bg-slate-50" required>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1.5">مکان/لینک</label>
-                                    <input type="text" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50" placeholder="دفتر مرکزی">
+                                    <input type="text" id="meetingLocation" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50" placeholder="دفتر مرکزی">
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl py-3.5 mt-4 transition shadow-lg">ثبت در تقویم</button>
+                            <button type="submit" id="btn-submit-meeting" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl py-3.5 mt-4 transition shadow-lg">ثبت در تقویم</button>
                         </form>
                     </div>
 
+                    <!-- لیست جلسات -->
                     <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full max-h-[80vh]">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h3 class="font-black text-slate-800">جلسات پیش‌رو</h3>
                             <div class="flex gap-2">
-                                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg text-xs font-black">تقویم سال جاری</span>
+                                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg text-xs font-black">تقویم جلسات فعال</span>
                             </div>
                         </div>
-                        <div class="flex-1 p-6 overflow-y-auto space-y-4">
-                            <div class="flex items-stretch gap-4 group">
-                                <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2">
-                                    <span class="text-xs font-bold">آبان</span>
-                                    <span class="text-2xl font-black -mt-1">۱۵</span>
-                                </div>
-                                <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-black text-slate-800">جلسه هیئت مدیره صندوق</h4>
-                                        <span class="text-[10px] font-black bg-rose-100 text-rose-700 px-2 py-1 rounded-md">مهم</span>
-                                    </div>
-                                    <div class="flex gap-4 text-xs font-bold text-slate-500 mt-3">
-                                        <span><i class="fa-regular fa-clock ml-1"></i> ۱۶:۰۰ تا ۱۸:۰۰</span>
-                                        <span><i class="fa-solid fa-location-dot ml-1"></i> دفتر مرکزی</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-stretch gap-4 group">
-                                <div class="w-16 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-600 shrink-0 py-2">
-                                    <span class="text-xs font-bold">آبان</span>
-                                    <span class="text-2xl font-black -mt-1">۲۲</span>
-                                </div>
-                                <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-black text-slate-800">بررسی درخواست‌های وام ضروری</h4>
-                                        <span class="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-md">عادی</span>
-                                    </div>
-                                    <div class="flex gap-4 text-xs font-bold text-slate-500 mt-3">
-                                        <span><i class="fa-regular fa-clock ml-1"></i> ۱۸:۰۰ تا ۱۹:۳۰</span>
-                                        <span><i class="fa-solid fa-video ml-1"></i> آنلاین (میت)</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex-1 p-6 overflow-y-auto space-y-4" id="meetings-list-container">
+                            <!-- جلسات اینجا لود می‌شوند -->
                         </div>
                     </div>
                 </div>
@@ -326,6 +295,12 @@
 
         </div>
     </main>
+        // متغیرهای دیتابیس
+        let supaClient = null;
+        let tasksList = [];
+        let meetingsList = [];
+        let currentUser = null;
+        let realtimeSubscription = null;
 
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
@@ -508,22 +483,22 @@
                 
                 document.getElementById('email').disabled = false;
                 document.getElementById('password').disabled = false;
-                document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> هسته مرکزی متصل شد.</span>';
+                document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> ارتباط امن برقرار شد.</span>';
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-emerald-500";
 
-                checkSession();
+                // رفع باگ پریدن اطلاعات بعد از رفرش: استفاده از رویداد تغییر وضعیت احراز هویت
+                supaClient.auth.onAuthStateChange((event, session) => {
+                    if (session) {
+                        currentUser = session.user;
+                        initDashboard();
+                    }
+                });
+
             } catch (err) {
-                document.getElementById('login-subtitle').innerHTML = '<span class="text-rose-500">خطا در پیکربندی دیتابیس</span>';
+                showToast('خطا در تنظیمات پایگاه داده', 'error');
             }
         };
-
-        if (typeof window.supabase !== 'undefined') {
-            setupSupabase();
-        } else {
-            const script = document.createElement('script');
-            script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-            script.onload = setupSupabase;
-            script.onerror = () => {
+        script.onerror = () => {
                 const btn = document.getElementById('login-btn');
                 btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> خطا در شبکه (VPN را روشن کنید)';
                 btn.className = "w-full bg-rose-600 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg cursor-not-allowed text-sm";
@@ -531,11 +506,10 @@
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-rose-500";
             };
             document.head.appendChild(script);
-        }
 
-        // Auth Flow
+        // جریان احراز هویت
         async function checkSession() {
-            if(!supaClient) return;
+            // به دلیل استفاده از onAuthStateChange این تابع فقط نقش پشتیبان را دارد
             const { data: { session } } = await supaClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
@@ -577,67 +551,143 @@
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('password').value = '';
+            if (realtimeSubscription) {
+                supaClient.removeChannel(realtimeSubscription);
+            }
             currentUser = null;
         }
 
+        // راه اندازی داشبورد
         function initDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('auth-screen').classList.remove('flex');
             document.getElementById('main-dashboard').classList.remove('hidden');
             document.getElementById('main-dashboard').classList.add('flex');
             
-            document.getElementById('user-display-name').innerText = currentUser.email.split('@')[0];
+            document.getElementById('user-display-name').innerText = currentUser.email;
+            
             fetchTasks();
+            fetchMeetings();
+            setupRealtime();
         }
 
-        // Generate Avatar initials
-        function getInitials(name) {
-            if(!name || name === 'تخصیص نیافته') return '?';
-            return name.substring(0, 1);
+        // سیستم آپدیت زنده (Realtime) برای همه کاربرها
+        function setupRealtime() {
+            if (realtimeSubscription) {
+                supaClient.removeChannel(realtimeSubscription);
+            }
+            realtimeSubscription = supaClient.channel('qanat-live-channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
+                    fetchTasks(false); // دریافت آپدیت‌ها در پس‌زمینه بدون نمایش خطا
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'meetings' }, payload => {
+                    fetchMeetings(false);
+                })
+                .subscribe();
         }
 
-        function isOverdue(jalaliDateStr) {
-            if(!jalaliDateStr) return false;
-            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
-            let [y, m, d] = today.split('/');
-            if(m.length === 1) m = '0'+m;
-            if(d.length === 1) d = '0'+d;
-            const todayStr = `${y}/${m}/${d}`;
-            return jalaliDateStr < todayStr;
-        }
-
-        // Data Operations
-        async function fetchTasks() {
+        async function fetchTasks(showError = true) {
             try {
                 const { data, error } = await supaClient.from('tasks').select('*').order('created_at', { ascending: false });
                 
                 if (error) {
-                    if(error.code === '42P01') throw new Error('جدول وظایف پیدا نشد. حتما کدهای SQL را در پنل سوپابیس اجرا کنید.');
+                    console.error("Fetch Error:", error);
+                    if (error.code === '42P01') throw new Error('جدول tasks وجود ندارد! کدهای SQL را اجرا کنید.');
+                    if (error.code === '42501') throw new Error('شما اجازه دیدن کارها را ندارید (خطای RLS). کدهای SQL باید اجرا شوند.');
                     throw error;
                 }
                 
                 tasksList = data || [];
-                filteredTasksList = [...tasksList];
                 renderKanban();
-                if(!document.getElementById('view-performance').classList.contains('hidden')) generatePerformanceReport();
             } catch (err) {
-                showToast('خطای دیتابیس: ' + err.message, 'error', true);
+                if (showError) showToast(err.message || 'خطا در دریافت لیست وظایف از سرور', 'error');
             }
         }
 
-        // جستجوی زنده
-        function filterTasks() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            if(!query) {
-                filteredTasksList = [...tasksList];
-            } else {
-                filteredTasksList = tasksList.filter(t => 
-                    t.title.toLowerCase().includes(query) || 
-                    (t.assigned_to && t.assigned_to.toLowerCase().includes(query)) ||
-                    t.category.toLowerCase().includes(query)
-                );
+        // --- توابع مدیریت جلسات (تقویم) ---
+        async function fetchMeetings(showError = true) {
+            try {
+                const { data, error } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
+                if (error) throw error;
+                meetingsList = data || [];
+                renderMeetings();
+            } catch (err) {
+                if (showError) showToast('خطا در دریافت تقویم جلسات', 'error');
             }
-            renderKanban();
+        }
+
+        async function submitMeeting() {
+            const title = document.getElementById('meetingTitle').value;
+            const date = document.getElementById('meetingDate').value;
+            const time = document.getElementById('meetingTime').value;
+            const location = document.getElementById('meetingLocation').value;
+            
+            const btn = document.getElementById('btn-submit-meeting');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال ثبت...';
+            btn.disabled = true;
+
+            try {
+                const newMeeting = { title, meeting_date: date, meeting_time: time, location };
+                const { error } = await supaClient.from('meetings').insert([newMeeting]);
+                if (error) throw error;
+                
+                showToast('جلسه با موفقیت در تقویم ثبت شد', 'success');
+                document.getElementById('meetingForm').reset();
+            } catch (err) {
+                showToast('خطا در ثبت. آیا کدهای SQL مربوط به meetings را اجرا کردید؟', 'error');
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteMeeting(id) {
+            if(!confirm('آیا از لغو این جلسه مطمئن هستید؟')) return;
+            try {
+                const { error } = await supaClient.from('meetings').delete().eq('id', id);
+                if (error) throw error;
+                showToast('جلسه لغو شد', 'info');
+            } catch (err) {
+                showToast('خطا در لغو جلسه', 'error');
+            }
+        }
+
+        function renderMeetings() {
+            const container = document.getElementById('meetings-list-container');
+            container.innerHTML = '';
+            
+            if (meetingsList.length === 0) {
+                container.innerHTML = '<div class="h-full w-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-regular fa-calendar-xmark text-5xl mb-4 opacity-50"></i><span class="text-sm font-bold">هیچ جلسه‌ای برای آینده تنظیم نشده است.</span></div>';
+                return;
+            }
+
+            meetingsList.forEach(m => {
+                let dateParts = m.meeting_date.split('/');
+                let day = dateParts.length === 3 ? dateParts[2] : '-';
+                let monthNum = dateParts.length === 3 ? parseInt(dateParts[1]) : 0;
+                let monthNames = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+                let monthStr = (monthNum > 0 && monthNum <= 12) ? monthNames[monthNum - 1] : 'نامشخص';
+
+                let html = `
+                <div class="flex items-stretch gap-4 group animate-fade-up">
+                    <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
+                        <span class="text-xs font-bold">${monthStr}</span>
+                        <span class="text-2xl font-black -mt-1">${day}</span>
+                    </div>
+                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-black text-slate-800 text-sm md:text-base">${m.title}</h4>
+                            <button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1 bg-slate-50 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 shadow-sm" title="لغو جلسه"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-xs font-bold text-slate-500 mt-3">
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || 'مشخص نشده'}</span>
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
         }
 
         function renderKanban() {
