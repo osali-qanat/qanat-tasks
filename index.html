@@ -598,6 +598,7 @@
                 }
                 
                 tasksList = data || [];
+                filteredTasksList = [...tasksList];
                 renderKanban();
             } catch (err) {
                 if (showError) showToast(err.message || 'خطا در دریافت لیست وظایف از سرور', 'error');
