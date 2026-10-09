@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سیستم جامع مدیریت کارهای صندوق قنات</title>
+    <title>سیستم جامع مدیریت پروژه‌ها | صندوق قنات</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,248 +11,359 @@
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- FontAwesome & Vazirmatn Font -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Jalali DatePicker -->
+    <link rel="stylesheet" href="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.css">
+    <script src="https://unpkg.com/@majidh1/jalalidatepicker/dist/jalalidatepicker.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;700;900&display=swap');
-        body {
-            font-family: 'Vazirmatn', Tahoma, sans-serif;
-            background-color: #f5f4f1; /* رنگ خاکی روشن */
-            color: #292524;
-        }
+        body { font-family: 'Vazirmatn', Tahoma, sans-serif; background-color: #f1f5f9; color: #1e293b; }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* UI Animations */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         .sidebar-item { transition: all 0.2s ease; }
-        .sidebar-item.active {
-            background-color: #0d9488;
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.4);
-        }
+        .sidebar-item.active { background-color: #0f766e; color: white; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3); font-weight: 900; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
-        .modal-overlay { background-color: rgba(28, 25, 23, 0.7); backdrop-filter: blur(4px); z-index: 100; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 100; }
 
-        /* Kanban Specifics */
-        .kanban-col { min-height: 50vh; transition: background-color 0.2s; border: 2px dashed transparent; }
-        .kanban-col.drag-over { background-color: rgba(13, 148, 136, 0.05); border-color: #0d9488; }
-        .task-card { cursor: grab; transition: transform 0.2s, box-shadow 0.2s; }
+        /* Kanban Drag & Drop */
+        .kanban-col { min-height: 50vh; transition: all 0.2s ease; border: 2px dashed transparent; }
+        .kanban-col.drag-over { background-color: rgba(13, 148, 136, 0.05); border-color: #0d9488; border-radius: 0.75rem; }
+        .task-card { cursor: grab; transition: all 0.2s ease; }
         .task-card:active { cursor: grabbing; }
-        .task-card.dragging { opacity: 0.4; transform: scale(0.95) rotate(2deg); z-index: 50; }
+        .task-card.dragging { opacity: 0.5; transform: scale(0.95) rotate(2deg); z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* DatePicker Customization */
+        jdp-container { z-index: 9999 !important; font-family: 'Vazirmatn', sans-serif !important; }
     </style>
 </head>
-<body class="flex h-[100dvh] w-full overflow-hidden relative">
+<body class="flex h-[100dvh] w-full overflow-hidden relative selection:bg-teal-200 selection:text-teal-900">
 
-    <div id="toast-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[200] text-sm font-bold transition-all duration-300 opacity-0 translate-y-[-2rem] pointer-events-none"></div>
+    <!-- STREAMING_CHUNK:Toast Notification System -->
+    <div id="toast-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-2"></div>
 
-    <div id="auth-screen" class="fixed inset-0 bg-[#f5f4f1] z-[150] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
-        <div class="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-stone-200 relative overflow-hidden animate-fade">
+    <!-- STREAMING_CHUNK:Auth Screen -->
+    <div id="auth-screen" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+        <div class="max-w-md w-full glass-panel p-8 rounded-3xl shadow-2xl border border-slate-200 relative overflow-hidden animate-fade-up">
             <div id="connection-status" class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 animate-pulse"></div>
             
             <div class="text-center mb-8 mt-2">
-                <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-800 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-teal-200 transform rotate-3">
-                    <i class="fa-solid fa-layer-group text-3xl text-white -rotate-3"></i>
+                <div class="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-teal-200 transform rotate-3">
+                    <i class="fa-solid fa-shield-halved text-3xl text-white -rotate-3"></i>
                 </div>
-                <h2 class="text-2xl font-black text-stone-800">مدیریت وظایف قنات</h2>
-                <p class="text-stone-500 text-sm mt-2 font-bold" id="login-subtitle">در حال اتصال به دیتابیس...</p>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">پرتال سازمانی قنات</h2>
+                <p class="text-slate-500 text-xs mt-2 font-bold" id="login-subtitle">در حال اعتبارسنجی هسته مرکزی...</p>
             </div>
             
             <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-black text-stone-700 mb-1.5">ایمیل سازمانی</label>
+                    <label class="block text-xs font-black text-slate-700 mb-1.5">شناسه کاربری (ایمیل)</label>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
-                        <input type="email" id="email" class="w-full border-2 border-stone-200 rounded-xl py-3 pr-11 pl-4 text-left focus:border-teal-500 outline-none transition-all font-bold bg-stone-50 focus:bg-white" dir="ltr" value="osali5000@gmail.com" required disabled>
+                        <i class="fa-solid fa-envelope absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" value="osali5000@gmail.com" required disabled>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-black text-stone-700 mb-1.5">رمز عبور</label>
+                    <label class="block text-xs font-black text-slate-700 mb-1.5">رمز عبور امنیتی</label>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
-                        <input type="password" id="password" class="w-full border-2 border-stone-200 rounded-xl py-3 pr-11 pl-4 text-left focus:border-teal-500 outline-none transition-all font-bold bg-stone-50 focus:bg-white" dir="ltr" placeholder="رمز عبور خود را وارد کنید" required disabled>
+                        <i class="fa-solid fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="password" id="password" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="••••••••" required disabled>
                     </div>
                 </div>
-                <button type="submit" id="login-btn" class="w-full bg-stone-200 text-stone-400 font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center gap-2" disabled>
-                    <i class="fa-solid fa-circle-notch fa-spin text-lg"></i> بارگذاری سیستم...
+                <button type="submit" id="login-btn" class="w-full bg-slate-200 text-slate-400 font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center gap-2" disabled>
+                    <i class="fa-solid fa-circle-notch fa-spin text-lg"></i> برقراری ارتباط...
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-stone-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
 
-    <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-stone-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20">
-        <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3">
+    <!-- STREAMING_CHUNK:Sidebar Navigation -->
+    <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l border-teal-900">
+        <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3 bg-teal-950/50">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-500/30">
-                    <i class="fa-solid fa-list-check text-xl"></i>
+                <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-900">
+                    <i class="fa-solid fa-layer-group text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-white font-black text-lg leading-tight">بورد پروژه‌ها</h2>
-                    <p class="text-[10px] text-teal-200/60 font-bold tracking-wider">صندوق قنات</p>
+                    <h2 class="text-white font-black text-base leading-tight">بورد پروژه‌ها</h2>
+                    <p class="text-[10px] text-teal-300 font-bold tracking-wider uppercase mt-0.5">صندوق قنات</p>
                 </div>
             </div>
-            <button onclick="toggleSidebar()" class="lg:hidden text-teal-400 hover:text-white">
+            <button onclick="toggleSidebar()" class="lg:hidden text-teal-500 hover:text-white transition">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold">
-                <i class="fa-solid fa-kanban w-5"></i> بورد مدیریت کارهای جاری
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
+                <i class="fa-solid fa-kanban w-5"></i> مدیریت وظایف (Kanban)
             </button>
-            <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-teal-900 hover:text-white" onclick="showToast('این بخش به زودی فعال می‌شود', 'info')">
-                <i class="fa-solid fa-chart-line w-5"></i> گزارش عملکرد اعضا
+            <button onclick="switchTab('performance')" id="tab-btn-performance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
+                <i class="fa-solid fa-chart-pie w-5"></i> گزارش عملکرد اعضا
             </button>
-            <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-teal-900 hover:text-white" onclick="showToast('این بخش به زودی فعال می‌شود', 'info')">
-                <i class="fa-solid fa-calendar-days w-5"></i> تقویم جلسات
+            <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
+                <i class="fa-regular fa-calendar-days w-5"></i> تقویم جلسات
             </button>
         </nav>
         
-        <div class="p-4 border-t border-teal-900">
-            <div class="bg-teal-900/50 rounded-xl p-3 flex items-center gap-3 border border-teal-800/50">
-                <div class="w-8 h-8 rounded-full bg-teal-800 flex items-center justify-center text-teal-300 font-bold">م</div>
+        <div class="p-4 border-t border-teal-900 bg-teal-950/80">
+            <div class="bg-teal-900/40 rounded-xl p-3 flex items-center gap-3 border border-teal-800/50">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black shadow-inner">ق</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-white truncate" dir="ltr" id="user-display-name">Loading...</p>
-                    <p class="text-[10px] text-teal-400">مدیر سیستم</p>
+                    <p class="text-[11px] font-black text-white truncate" dir="ltr" id="user-display-name">...</p>
+                    <p class="text-[9px] text-teal-400 font-bold uppercase tracking-widest mt-0.5">مدیر ارشد سیستم</p>
                 </div>
-                <button onclick="handleLogout()" class="text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-teal-800 transition" title="خروج">
-                    <i class="fa-solid fa-power-off"></i>
+                <button onclick="handleLogout()" class="text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition" title="خروج از سیستم">
+                    <i class="fa-solid fa-power-off text-lg"></i>
                 </button>
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col h-full overflow-hidden w-full relative z-0">
+    <!-- STREAMING_CHUNK:Main Work Area -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden w-full relative z-0 bg-slate-50">
         
-        <header class="h-16 bg-white border-b border-stone-200 flex items-center justify-between px-3 md:px-6 flex-shrink-0 shadow-sm z-10">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0 shadow-sm z-10">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden text-stone-500 hover:text-teal-600 focus:outline-none p-2 rounded-lg bg-stone-100 flex-shrink-0">
+                <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-teal-600 focus:outline-none p-2 rounded-lg bg-slate-100 transition">
                     <i class="fa-solid fa-bars text-lg"></i>
                 </button>
-                <h1 class="text-base md:text-xl font-black text-stone-800">بورد مدیریت کارهای جاری (Kanban)</h1>
+                <h1 id="page-title" class="text-base md:text-lg font-black text-slate-800">بورد مدیریت کارهای جاری</h1>
             </div>
             
-            <button onclick="openNewTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold shadow-md shadow-teal-200 transition-all flex items-center gap-2">
-                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">ثبت وظیفه جدید</span>
-            </button>
+            <div id="header-actions">
+                <button onclick="openNewTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-teal-200 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">ثبت وظیفه جدید</span>
+                </button>
+            </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <!-- STREAMING_CHUNK:Views Container -->
+        <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 relative">
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm border-r-4 border-r-stone-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] md:text-xs font-bold text-stone-500 mb-1">کل وظایف سیستم</p>
-                            <h3 class="text-xl md:text-2xl font-black text-stone-800" id="stat-total">0</h3>
-                        </div>
-                        <div class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600 flex items-center justify-center"><i class="fa-solid fa-layer-group"></i></div>
+            <!-- VIEW 1: KANBAN BOARD -->
+            <div id="view-kanban" class="block h-full animate-fade-up">
+                <!-- Stats Row -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-1 h-full bg-slate-400"></div>
+                        <p class="text-[10px] font-black text-slate-500 mb-1 uppercase tracking-wider">کل وظایف</p>
+                        <h3 class="text-2xl font-black text-slate-800" id="stat-total">0</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-1 h-full bg-sky-500"></div>
+                        <p class="text-[10px] font-black text-sky-600 mb-1 uppercase tracking-wider">برای انجام</p>
+                        <h3 class="text-2xl font-black text-sky-900" id="stat-todo">0</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-1 h-full bg-amber-500"></div>
+                        <p class="text-[10px] font-black text-amber-600 mb-1 uppercase tracking-wider">در دست اقدام</p>
+                        <h3 class="text-2xl font-black text-amber-900" id="stat-inprogress">0</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-1 h-full bg-emerald-500"></div>
+                        <p class="text-[10px] font-black text-emerald-600 mb-1 uppercase tracking-wider">پایان یافته</p>
+                        <h3 class="text-2xl font-black text-emerald-900" id="stat-done">0</h3>
                     </div>
                 </div>
-                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm border-r-4 border-r-sky-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] md:text-xs font-bold text-sky-700 mb-1">برای انجام (To-Do)</p>
-                            <h3 class="text-xl md:text-2xl font-black text-sky-900" id="stat-todo">0</h3>
+
+                <!-- Kanban Columns -->
+                <div class="flex gap-6 h-full min-w-max pb-12 items-start">
+                    
+                    <!-- Col 1 -->
+                    <div class="w-80 flex flex-col bg-slate-100/60 rounded-2xl border border-slate-200 max-h-[75vh]">
+                        <div class="p-4 border-b border-slate-200 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
+                            <h3 class="font-black text-slate-700 text-sm flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-sky-500"></span> برای انجام
+                            </h3>
+                            <span class="bg-white text-slate-500 text-[10px] font-black px-2 py-1 rounded-md border border-slate-200" id="badge-todo">0</span>
                         </div>
-                        <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center"><i class="fa-regular fa-circle"></i></div>
+                        <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo"></div>
                     </div>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm border-r-4 border-r-amber-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] md:text-xs font-bold text-amber-700 mb-1">در دست اقدام</p>
-                            <h3 class="text-xl md:text-2xl font-black text-amber-900" id="stat-inprogress">0</h3>
+
+                    <!-- Col 2 -->
+                    <div class="w-80 flex flex-col bg-amber-50/40 rounded-2xl border border-amber-100 max-h-[75vh]">
+                        <div class="p-4 border-b border-amber-100 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
+                            <h3 class="font-black text-amber-900 text-sm flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> در دست اقدام
+                            </h3>
+                            <span class="bg-white text-amber-600 text-[10px] font-black px-2 py-1 rounded-md border border-amber-200" id="badge-inprogress">0</span>
                         </div>
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-spinner fa-spin-pulse"></i></div>
+                        <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress"></div>
                     </div>
-                </div>
-                <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm border-r-4 border-r-emerald-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] md:text-xs font-bold text-emerald-700 mb-1">انجام شده / پایان</p>
-                            <h3 class="text-xl md:text-2xl font-black text-emerald-900" id="stat-done">0</h3>
+
+                    <!-- Col 3 -->
+                    <div class="w-80 flex flex-col bg-emerald-50/40 rounded-2xl border border-emerald-100 max-h-[75vh]">
+                        <div class="p-4 border-b border-emerald-100 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
+                            <h3 class="font-black text-emerald-900 text-sm flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> انجام شده
+                            </h3>
+                            <span class="bg-white text-emerald-600 text-[10px] font-black px-2 py-1 rounded-md border border-emerald-200" id="badge-done">0</span>
                         </div>
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-check-double"></i></div>
+                        <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-6 h-full min-w-max pb-12">
-                
-                <!-- Column: To-Do -->
-                <div class="w-80 flex flex-col bg-sky-50/50 rounded-2xl border border-sky-100 h-full max-h-[70vh]">
-                    <div class="p-4 border-b border-sky-100 bg-sky-100/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-sky-900 text-sm flex items-center gap-2">
-                            <i class="fa-regular fa-circle text-sky-500"></i> برای انجام (To-Do)
-                        </h3>
+            <!-- VIEW 2: PERFORMANCE REPORT -->
+            <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div>
+                            <h3 class="font-black text-slate-800">جدول راندمان و عملکرد اعضا</h3>
+                            <p class="text-xs text-slate-500 font-bold mt-1">محاسبه بر اساس وظایف واگذار شده و زمان انجام</p>
+                        </div>
+                        <button onclick="fetchTasks()" class="text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-2 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-rotate-right ml-1"></i> بروزرسانی</button>
                     </div>
-                    <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo">
-                        <!-- Tasks inject here -->
-                    </div>
-                </div>
-
-                <!-- Column: In Progress -->
-                <div class="w-80 flex flex-col bg-amber-50/50 rounded-2xl border border-amber-100 h-full max-h-[70vh]">
-                    <div class="p-4 border-b border-amber-100 bg-amber-100/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-amber-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-spinner text-amber-500"></i> در دست اقدام
-                        </h3>
-                    </div>
-                    <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress">
-                        <!-- Tasks inject here -->
-                    </div>
-                </div>
-
-                <!-- Column: Done -->
-                <div class="w-80 flex flex-col bg-emerald-50/50 rounded-2xl border border-emerald-100 h-full max-h-[70vh]">
-                    <div class="p-4 border-b border-emerald-100 bg-emerald-100/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-emerald-900 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-check-double text-emerald-500"></i> انجام شده (Done)
-                        </h3>
-                    </div>
-                    <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done">
-                        <!-- Tasks inject here -->
+                    <div class="flex-1 p-6 flex flex-col items-center text-center overflow-y-auto">
+                        <div class="w-full overflow-x-auto border border-slate-100 rounded-2xl">
+                            <table class="w-full text-right text-sm whitespace-nowrap">
+                                <thead class="text-slate-500 bg-slate-100/80">
+                                    <tr>
+                                        <th class="p-4 font-black">نام عضو / بخش</th>
+                                        <th class="p-4 font-black text-center">کل وظایف</th>
+                                        <th class="p-4 font-black text-center text-emerald-600">تکمیل شده</th>
+                                        <th class="p-4 font-black text-center text-amber-600">در جریان</th>
+                                        <th class="p-4 font-black text-center text-rose-600">معوقه (گذشته از سررسید)</th>
+                                        <th class="p-4 font-black text-center">امتیاز راندمان</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100" id="performance-table-body">
+                                    <!-- تزریق با جاوا اسکریپت -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-
             </div>
+
+            <!-- VIEW 3: MEETINGS CALENDAR -->
+            <div id="view-calendar" class="hidden h-full animate-fade-up">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                    <!-- فرم ثبت جلسه -->
+                    <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
+                        <h3 class="font-black text-slate-800 mb-6 border-b border-slate-100 pb-3"><i class="fa-regular fa-calendar-plus text-teal-600 ml-2"></i> زمان‌بندی جلسه جدید</h3>
+                        <form onsubmit="event.preventDefault(); showToast('جلسه با موفقیت در تقویم ثبت شد', 'success'); document.getElementById('meetingForm').reset();" id="meetingForm" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">موضوع جلسه</label>
+                                <input type="text" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" placeholder="مثال: بررسی پرونده‌های وام" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">تاریخ جلسه (شمسی)</label>
+                                <div class="relative">
+                                    <i class="fa-regular fa-calendar absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" data-jdp class="w-full border-2 border-slate-200 rounded-xl py-3 pr-4 pl-10 text-left focus:border-teal-500 outline-none font-black text-sm bg-slate-50 cursor-pointer" placeholder="انتخاب کنید..." readonly required>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">ساعت شروع</label>
+                                    <input type="time" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center focus:border-teal-500 outline-none font-bold bg-slate-50" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">مکان/لینک</label>
+                                    <input type="text" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50" placeholder="دفتر مرکزی">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl py-3.5 mt-4 transition shadow-lg">ثبت در تقویم</button>
+                        </form>
+                    </div>
+
+                    <!-- لیست جلسات -->
+                    <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full max-h-[80vh]">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-black text-slate-800">جلسات پیش‌رو</h3>
+                            <div class="flex gap-2">
+                                <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-lg text-xs font-black">تقویم سال جاری</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 p-6 overflow-y-auto space-y-4">
+                            <!-- Mock Meetings -->
+                            <div class="flex items-stretch gap-4 group">
+                                <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2">
+                                    <span class="text-xs font-bold">آبان</span>
+                                    <span class="text-2xl font-black -mt-1">۱۵</span>
+                                </div>
+                                <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-black text-slate-800">جلسه هیئت مدیره صندوق</h4>
+                                        <span class="text-[10px] font-black bg-rose-100 text-rose-700 px-2 py-1 rounded-md">مهم</span>
+                                    </div>
+                                    <div class="flex gap-4 text-xs font-bold text-slate-500 mt-3">
+                                        <span><i class="fa-regular fa-clock ml-1"></i> ۱۶:۰۰ تا ۱۸:۰۰</span>
+                                        <span><i class="fa-solid fa-location-dot ml-1"></i> دفتر مرکزی</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-stretch gap-4 group">
+                                <div class="w-16 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-600 shrink-0 py-2">
+                                    <span class="text-xs font-bold">آبان</span>
+                                    <span class="text-2xl font-black -mt-1">۲۲</span>
+                                </div>
+                                <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-black text-slate-800">بررسی درخواست‌های وام ضروری</h4>
+                                        <span class="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-md">عادی</span>
+                                    </div>
+                                    <div class="flex gap-4 text-xs font-bold text-slate-500 mt-3">
+                                        <span><i class="fa-regular fa-clock ml-1"></i> ۱۸:۰۰ تا ۱۹:۳۰</span>
+                                        <span><i class="fa-solid fa-video ml-1"></i> آنلاین (گوگل میت)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
+    <!-- STREAMING_CHUNK:Add Task Modal (Enterprise Edition) -->
     <div id="newTaskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade">
-            <div class="p-5 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                <h3 class="text-lg font-black text-stone-800" id="modalTitle"><i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>تعریف وظیفه جدید</h3>
-                <button onclick="closeNewTaskModal()" class="text-stone-400 hover:text-rose-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                <div>
+                    <h3 class="text-lg font-black text-slate-800" id="modalTitle"><i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>تعریف وظیفه جدید</h3>
+                    <p class="text-xs text-slate-500 font-bold mt-1">اطلاعات کار را جهت قرارگیری در بورد تکمیل کنید</p>
+                </div>
+                <button type="button" onclick="closeNewTaskModal()" class="text-slate-400 hover:text-rose-500 transition bg-white p-2 rounded-xl shadow-sm border border-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <form id="taskForm" onsubmit="event.preventDefault(); submitTask();" class="p-6 overflow-y-auto max-h-[70vh]">
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-stone-700 mb-1.5">عنوان کار (اجباری)</label>
-                        <input type="text" id="taskTitle" class="w-full border-2 border-stone-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-stone-50 focus:bg-white transition-colors" placeholder="مثال: بررسی پرونده وام آقای احمدی" required>
+                        <label class="block text-xs font-black text-slate-700 mb-1.5">عنوان کار (اجباری)</label>
+                        <input type="text" id="taskTitle" class="w-full border-2 border-slate-200 rounded-xl p-3.5 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50 focus:bg-white transition-colors" placeholder="مثال: بررسی مدارک ضامن آقای احمدی" required>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-stone-700 mb-1.5">توضیحات تکمیلی (اختیاری)</label>
-                        <textarea id="taskDesc" rows="3" class="w-full border-2 border-stone-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs bg-stone-50 focus:bg-white transition-colors leading-relaxed" placeholder="جزئیات بیشتر در مورد این وظیفه..."></textarea>
+                        <label class="block text-xs font-black text-slate-700 mb-1.5">توضیحات تکمیلی (اختیاری)</label>
+                        <textarea id="taskDesc" rows="3" class="w-full border-2 border-slate-200 rounded-xl p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50 focus:bg-white transition-colors leading-relaxed" placeholder="جزئیات، لینک‌ها یا یادداشت‌های مربوط به این وظیفه..."></textarea>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 border-t border-slate-100 pt-5 mt-2">
                         <div>
-                            <label class="block text-xs font-bold text-stone-700 mb-1.5">دسته‌بندی</label>
-                            <select id="taskCategory" class="w-full border-2 border-stone-200 rounded-xl p-3 focus:border-teal-500 outline-none text-sm font-bold bg-stone-50">
+                            <label class="block text-xs font-black text-slate-700 mb-1.5">دسته‌بندی (دپارتمان)</label>
+                            <select id="taskCategory" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-sm font-bold bg-slate-50 cursor-pointer">
                                 <option value="مالی و حسابداری">💰 مالی و حسابداری</option>
                                 <option value="سیستم و فنی">💻 سیستم و فنی</option>
                                 <option value="پشتیبانی اعضا">👥 پشتیبانی اعضا</option>
@@ -260,9 +371,9 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-stone-700 mb-1.5">اولویت انجام</label>
-                            <select id="taskPriority" class="w-full border-2 border-stone-200 rounded-xl p-3 focus:border-teal-500 outline-none text-sm font-bold bg-stone-50">
-                                <option value="عادی">🟢 عادی</option>
+                            <label class="block text-xs font-black text-slate-700 mb-1.5">اولویت اجرا</label>
+                            <select id="taskPriority" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-sm font-bold bg-slate-50 cursor-pointer">
+                                <option value="عادی">🟢 اولویت عادی</option>
                                 <option value="مهم">🟠 مهم</option>
                                 <option value="فوری">🔴 فوری و حیاتی</option>
                             </select>
@@ -270,23 +381,37 @@
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-stone-700 mb-1.5">تاریخ سررسید (Deadline)</label>
-                        <input type="date" id="taskDueDate" class="w-full border-2 border-stone-200 rounded-xl p-3 focus:border-teal-500 outline-none text-sm font-bold bg-stone-50 text-left" dir="ltr">
+                        <label class="block text-xs font-black text-slate-700 mb-1.5">تاریخ سررسید (Deadline - شمسی)</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-calendar-check absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-600"></i>
+                            <input type="text" id="taskDueDate" data-jdp class="w-full border-2 border-slate-200 rounded-xl py-3 pr-4 pl-11 focus:border-teal-500 outline-none text-sm font-black bg-teal-50 text-left transition-colors cursor-pointer" placeholder="انتخاب تاریخ از تقویم..." readonly>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1.5"><i class="fa-solid fa-circle-info ml-1"></i> در صورت گذشتن تاریخ، کار به رنگ قرمز در می‌آید.</p>
                     </div>
                 </div>
             </form>
             
-            <div class="p-5 border-t border-stone-100 bg-stone-50 flex flex-col sm:flex-row justify-end gap-3">
-                <button type="button" onclick="closeNewTaskModal()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-stone-600 bg-white border-2 border-stone-200 hover:bg-stone-100 transition text-sm">انصراف</button>
-                <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-floppy-disk"></i> ثبت در پایگاه داده
+            <div class="p-6 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-3">
+                <button type="button" onclick="closeNewTaskModal()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-100 transition text-sm">لغو و انصراف</button>
+                <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-black text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> ذخیره در پایگاه داده
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- STREAMING_CHUNK:Javascript Application Logic -->
     <script>
-        // UI Helpers
+        // Init Jalali DatePicker
+        jalaliDatepicker.startWatch({
+            minDate: "attr",
+            maxDate: "attr",
+            time: false,
+            hideAfterChange: true,
+            hasHiddenInput: true
+        });
+
+        // UI Core
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -301,26 +426,67 @@
             }
         }
 
-        function showToast(message, type = 'info') {
+        function switchTab(tabId) {
+            // Update active state in sidebar
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+
+            // Hide all views
+            ['kanban', 'performance', 'calendar'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`view-${id}`).classList.remove('block', 'flex');
+            });
+
+            // Show target view
+            const targetView = document.getElementById(`view-${tabId}`);
+            targetView.classList.remove('hidden');
+            if(tabId === 'kanban') targetView.classList.add('block');
+            else targetView.classList.add('flex');
+
+            // Update Header Title
+            const titles = {
+                'kanban': 'بورد مدیریت کارهای جاری',
+                'performance': 'گزارش عملکرد و راندمان اعضا',
+                'calendar': 'تقویم جلسات و زمان‌بندی'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            // Manage header action buttons visibility
+            const headerActions = document.getElementById('header-actions');
+            if(tabId === 'kanban') {
+                headerActions.innerHTML = `<button onclick="openNewTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-teal-200 transition-all flex items-center gap-2"><i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">ثبت وظیفه جدید</span></button>`;
+            } else {
+                headerActions.innerHTML = '';
+            }
+
+            if(window.innerWidth < 1024) toggleSidebar();
+            
+            if(tabId === 'performance') generatePerformanceReport();
+        }
+
+        function showToast(message, type = 'info', persist = false) {
             const toast = document.getElementById('toast-message');
             let icon = '<i class="fa-solid fa-circle-info"></i>';
-            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[300] text-sm font-bold transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
+            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
             
             if(type === 'error') {
-                toast.className += 'bg-rose-600 border border-rose-800';
-                icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+                toast.className += 'bg-rose-600 border-2 border-rose-800';
+                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
             } else if (type === 'success') {
-                toast.className += 'bg-emerald-600 border border-emerald-800';
+                toast.className += 'bg-emerald-600 border-2 border-emerald-800';
                 icon = '<i class="fa-solid fa-circle-check"></i>';
             } else {
-                toast.className += 'bg-teal-600 border border-teal-800';
+                toast.className += 'bg-teal-800 border-2 border-teal-950';
             }
             
             toast.innerHTML = icon + ' ' + message;
-            setTimeout(() => {
-                toast.classList.replace('opacity-100', 'opacity-0');
-                toast.classList.replace('translate-y-0', 'translate-y-[-2rem]');
-            }, 4000);
+            
+            if(!persist) {
+                setTimeout(() => {
+                    toast.classList.replace('opacity-100', 'opacity-0');
+                    toast.classList.replace('translate-y-0', 'translate-y-[-2rem]');
+                }, 5000);
+            }
         }
 
         // Database Variables
@@ -328,9 +494,8 @@
         let tasksList = [];
         let currentUser = null;
 
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-        script.onload = () => {
+        // DB Connection
+        const setupSupabase = () => {
             try {
                 supaClient = window.supabase.createClient(
                     'https://fsbfdyipycoeykmhiaox.supabase.co', 
@@ -339,27 +504,39 @@
                 
                 const btn = document.getElementById('login-btn');
                 btn.disabled = false;
-                btn.innerHTML = 'ورود امن به پنل مدیریت <i class="fa-solid fa-arrow-left mr-2"></i>';
+                btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
                 btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
                 
                 document.getElementById('email').disabled = false;
                 document.getElementById('password').disabled = false;
-                document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> ارتباط امن برقرار شد.</span>';
+                document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> هسته مرکزی متصل شد.</span>';
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-emerald-500";
 
                 checkSession();
             } catch (err) {
-                showToast('خطا در تنظیمات پایگاه داده', 'error');
+                document.getElementById('login-subtitle').innerHTML = '<span class="text-rose-500">خطا در پیکربندی دیتابیس</span>';
             }
         };
-        script.onerror = () => {
-            showToast('خطا در بارگذاری کتابخانه اصلی. لطفا اینترنت را بررسی کنید.', 'error');
-            document.getElementById('login-subtitle').innerHTML = '<span class="text-rose-500">ارتباط با سرور مسدود است.</span>';
-            document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-rose-500";
-        };
-        document.head.appendChild(script);
 
+        if (typeof window.supabase !== 'undefined') {
+            setupSupabase();
+        } else {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+            script.onload = setupSupabase;
+            script.onerror = () => {
+                const btn = document.getElementById('login-btn');
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> خطا در شبکه (VPN را روشن کنید)';
+                btn.className = "w-full bg-rose-600 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg cursor-not-allowed text-sm";
+                document.getElementById('login-subtitle').innerHTML = '<span class="text-rose-500">ارتباط با سرور جهانی مسدود است.</span>';
+                document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-rose-500";
+            };
+            document.head.appendChild(script);
+        }
+
+        // Auth Flow
         async function checkSession() {
+            if(!supaClient) return;
             const { data: { session } } = await supaClient.auth.getSession();
             if (session) {
                 currentUser = session.user;
@@ -376,7 +553,7 @@
             
             const origClass = btn.className;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال اعتبارسنجی...';
-            btn.className = "w-full bg-stone-800 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-md cursor-not-allowed text-sm";
+            btn.className = "w-full bg-slate-800 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-md cursor-not-allowed text-sm";
             btn.disabled = true;
 
             try {
@@ -384,11 +561,11 @@
                 if (error) throw error;
                 
                 currentUser = data.user;
-                showToast('با موفقیت وارد شدید', 'success');
-                setTimeout(() => { initDashboard(); }, 500);
+                showToast('هویت تایید شد. در حال ورود...', 'success');
+                setTimeout(() => { initDashboard(); }, 600);
             } catch (err) {
-                showToast('خطا در ورود: ' + (err.message.includes('Invalid') ? 'رمز عبور اشتباه است' : err.message), 'error');
-                btn.innerHTML = 'ورود امن به پنل مدیریت <i class="fa-solid fa-arrow-left mr-2"></i>';
+                showToast('خطا: ' + (err.message.includes('Invalid') ? 'رمز عبور یا ایمیل اشتباه است' : err.message), 'error');
+                btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
                 btn.className = origClass;
                 btn.disabled = false;
             }
@@ -397,32 +574,54 @@
         async function handleLogout() {
             await supaClient.auth.signOut();
             document.getElementById('main-dashboard').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('flex');
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('password').value = '';
             currentUser = null;
         }
 
+        // App Initialization
         function initDashboard() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('auth-screen').classList.remove('flex');
             document.getElementById('main-dashboard').classList.remove('hidden');
             document.getElementById('main-dashboard').classList.add('flex');
             
-            document.getElementById('user-display-name').innerText = currentUser.email;
+            document.getElementById('user-display-name').innerText = currentUser.email.split('@')[0];
             fetchTasks();
         }
 
+        // Helper to check today date against Persian Due Date
+        function isOverdue(jalaliDateStr) {
+            if(!jalaliDateStr) return false;
+            // A simple string comparison works for YYYY/MM/DD formats if padded correctly
+            // Getting today in Jalali:
+            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
+            // Normalize slashes and format to match standard JDP YYYY/MM/DD
+            let [y, m, d] = today.split('/');
+            if(m.length === 1) m = '0'+m;
+            if(d.length === 1) d = '0'+d;
+            const todayStr = `${y}/${m}/${d}`;
+            
+            return jalaliDateStr < todayStr;
+        }
+
+        // Data Operations
         async function fetchTasks() {
             try {
                 const { data, error } = await supaClient.from('tasks').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
                 
-                tasksList = data;
+                if (error) {
+                    if(error.code === '42P01') throw new Error('جدول وظایف پیدا نشد. حتما کدهای SQL را در پنل سوپابیس اجرا کنید.');
+                    throw error;
+                }
+                
+                tasksList = data || [];
                 renderKanban();
+                if(!document.getElementById('view-performance').classList.contains('hidden')) generatePerformanceReport();
             } catch (err) {
-                showToast('خطا در دریافت لیست وظایف از سرور', 'error');
-                console.error(err);
+                showToast('خطای دیتابیس: ' + err.message, 'error', true);
             }
         }
 
@@ -448,46 +647,113 @@
                 if(task.priority === 'فوری' || task.priority === '🔴 فوری و حیاتی') pConfig = { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', icon: 'fa-fire' };
 
                 const createdDate = task.created_at ? new Date(task.created_at).toLocaleDateString('fa-IR') : 'نامشخص';
-                const dueHtml = task.due_date ? `<div class="mt-2 text-[10px] font-bold text-rose-600 bg-rose-50 inline-block px-2 py-1 rounded border border-rose-100"><i class="fa-regular fa-calendar-xmark ml-1"></i>سررسید: ${new Date(task.due_date).toLocaleDateString('fa-IR')}</div>` : '';
-                const descHtml = task.description ? `<p class="text-[11px] text-stone-500 leading-relaxed mb-3 line-clamp-2">${task.description}</p>` : '';
+                
+                // Overdue logic
+                let overdueClass = '';
+                let dueIconColor = 'text-slate-500';
+                if(task.due_date && s !== 'done') {
+                    if(isOverdue(task.due_date)) {
+                        overdueClass = 'bg-rose-50 border-rose-200 shadow-rose-100';
+                        dueIconColor = 'text-rose-600 animate-pulse';
+                    }
+                }
+                
+                const dueHtml = task.due_date ? `<div class="mt-2.5 text-[10px] font-black ${overdueClass ? 'text-rose-700 bg-rose-100 border-rose-200' : 'text-slate-600 bg-slate-100 border-slate-200'} inline-flex items-center gap-1.5 px-2.5 py-1 rounded border"><i class="fa-regular fa-calendar-xmark ${dueIconColor}"></i> سررسید: ${task.due_date}</div>` : '';
+                const descHtml = task.description ? `<p class="text-[11px] text-slate-500 font-medium leading-relaxed mb-3 line-clamp-3 bg-slate-50 p-2 rounded-lg border border-slate-100">${task.description}</p>` : '';
 
                 const cardHTML = `
-                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md hover:border-teal-400 relative group" draggable="true" ondragstart="drag(event)">
+                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? 'border-rose-300 shadow-md' : 'border-slate-200'} shadow-sm hover:shadow-lg hover:border-teal-400 relative group" draggable="true" ondragstart="drag(event)">
                         <div class="flex justify-between items-start mb-3">
-                            <span class="text-[10px] font-black px-2 py-1 rounded-md border ${pConfig.bg} ${pConfig.text} ${pConfig.border} flex items-center gap-1">
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded-md border ${pConfig.bg} ${pConfig.text} ${pConfig.border} flex items-center gap-1.5">
                                 <i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}
                             </span>
-                            <span class="text-[10px] text-stone-600 bg-stone-100 border border-stone-200 px-2 py-1 rounded font-bold">
+                            <span class="text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md font-black">
                                 ${task.category || 'عمومی'}
                             </span>
                         </div>
                         
-                        <h4 class="font-black text-stone-800 text-sm leading-relaxed mb-2">${task.title}</h4>
+                        <h4 class="font-black text-slate-800 text-sm leading-relaxed mb-2 pr-1">${task.title}</h4>
                         ${descHtml}
                         ${dueHtml}
                         
-                        <div class="flex justify-between items-end text-[10px] text-stone-400 pt-3 mt-3 border-t border-stone-100">
-                            <span class="font-bold"><i class="fa-solid fa-calendar-plus ml-1"></i> ثبت: ${createdDate}</span>
-                            <button onclick="deleteTask('${task.id}')" class="text-stone-400 hover:text-white transition p-1.5 rounded-lg hover:bg-rose-500 opacity-0 group-hover:opacity-100 shadow-sm" title="حذف وظیفه"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex justify-between items-end text-[10px] text-slate-400 pt-3 mt-3 border-t border-slate-100">
+                            <span class="font-bold"><i class="fa-solid fa-pencil ml-1 text-slate-300"></i> ${createdDate}</span>
+                            <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-white transition p-1.5 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-rose-500 opacity-0 group-hover:opacity-100 shadow-sm bg-slate-50" title="حذف وظیفه"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 `;
                 cols[s].innerHTML += cardHTML;
             });
 
+            // Empty States
+            ['todo', 'in_progress', 'done'].forEach(s => {
+                if(counts[s] === 0) {
+                    const emptyHTML = `<div class="h-full w-full flex flex-col items-center justify-center text-slate-400 py-10 opacity-70"><i class="fa-solid fa-ghost text-4xl mb-3"></i><span class="text-xs font-bold">هیچ موردی نیست</span></div>`;
+                    cols[s].innerHTML = emptyHTML;
+                }
+            });
+
             document.getElementById('stat-total').innerText = tasksList.length;
-            document.getElementById('stat-todo').innerText = counts.todo;
-            document.getElementById('stat-inprogress').innerText = counts.in_progress;
-            document.getElementById('stat-done').innerText = counts.done;
+            document.getElementById('stat-todo').innerText = counts.todo; document.getElementById('badge-todo').innerText = counts.todo;
+            document.getElementById('stat-inprogress').innerText = counts.in_progress; document.getElementById('badge-inprogress').innerText = counts.in_progress;
+            document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
+        function generatePerformanceReport() {
+            const tbody = document.getElementById('performance-table-body');
+            tbody.innerHTML = '';
+            
+            // Group tasks by Category (Simulating Members/Departments)
+            let reports = {};
+            tasksList.forEach(t => {
+                let cat = t.category || 'عمومی';
+                if(!reports[cat]) reports[cat] = { total: 0, done: 0, in_progress: 0, overdue: 0 };
+                
+                reports[cat].total++;
+                if(t.status === 'done' || t.status === 'انجام شده') reports[cat].done++;
+                if(t.status === 'in_progress' || t.status === 'در دست اقدام') reports[cat].in_progress++;
+                
+                if(t.status !== 'done' && t.due_date && isOverdue(t.due_date)) {
+                    reports[cat].overdue++;
+                }
+            });
+
+            if(Object.keys(reports).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold">اطلاعاتی برای نمایش وجود ندارد. ابتدا وظایفی ثبت کنید.</td></tr>`;
+                return;
+            }
+
+            Object.keys(reports).forEach(cat => {
+                let data = reports[cat];
+                let score = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+                // Penalize for overdue
+                score = Math.max(0, score - (data.overdue * 5));
+                
+                let scoreColor = score > 80 ? 'text-emerald-600 bg-emerald-50' : (score > 50 ? 'text-amber-600 bg-amber-50' : 'text-rose-600 bg-rose-50');
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4 font-black text-slate-800 text-center sm:text-right">${cat}</td>
+                        <td class="p-4 font-bold text-slate-600 text-center">${data.total}</td>
+                        <td class="p-4 font-bold text-emerald-600 text-center">${data.done}</td>
+                        <td class="p-4 font-bold text-amber-600 text-center">${data.in_progress}</td>
+                        <td class="p-4 font-bold text-rose-600 text-center">${data.overdue > 0 ? `<i class="fa-solid fa-triangle-exclamation ml-1"></i>${data.overdue}` : '0'}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1.5 rounded-xl border font-black ${scoreColor} border-current">${score} %</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Modals & DB Actions
         function openNewTaskModal() {
             document.getElementById('taskForm').reset();
             document.getElementById('newTaskModal').classList.remove('hidden');
+            document.getElementById('newTaskModal').classList.add('flex');
         }
         
         function closeNewTaskModal() {
             document.getElementById('newTaskModal').classList.add('hidden');
+            document.getElementById('newTaskModal').classList.remove('flex');
         }
 
         async function submitTask() {
@@ -499,7 +765,7 @@
             
             const btn = document.getElementById('btn-submit-task');
             const origContent = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال ذخیره...'; 
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال پردازش...'; 
             btn.disabled = true;
 
             try {
@@ -516,21 +782,22 @@
                 const { data, error } = await supaClient.from('tasks').insert([newTask]).select();
                 
                 if (error) {
+                    if (error.message.includes('Could not find the')) {
+                        throw new Error('فیلدهای جدید (مثل توضیحات و تاریخ) در دیتابیس یافت نشد. حتماً کدهای ALTER TABLE در Supabase را اجرا کنید.');
+                    }
                     if (error.code === '42501') {
-                        throw new Error('خطای دسترسی دیتابیس (RLS). لطفا کدهای SQL که داده شد را در پنل سوپابیس اجرا کنید تا اجازه ثبت وظیفه صادر شود.');
+                        throw new Error('شما دسترسی ایجاد وظیفه ندارید. (کدهای SQL مربوط به RLS را در سوپابیس اجرا کنید).');
                     }
                     throw error;
                 }
                 
-                showToast('وظیفه با موفقیت ثبت شد', 'success');
-                if(data && data.length > 0) {
-                     tasksList.unshift(data[0]); 
-                }
+                showToast('وظیفه جدید با موفقیت به بورد اضافه شد', 'success');
+                if(data && data.length > 0) { tasksList.unshift(data[0]); }
                 renderKanban();
                 closeNewTaskModal();
                 
             } catch (err) {
-                showToast(err.message || 'خطا در ثبت وظیفه', 'error');
+                showToast(err.message, 'error', true); // Persist toast
             } finally {
                 btn.innerHTML = origContent; 
                 btn.disabled = false;
@@ -538,37 +805,31 @@
         }
 
         async function deleteTask(id) {
-            if(!confirm('آیا از حذف این وظیفه مطمئن هستید؟ این کار غیرقابل بازگشت است.')) return;
+            if(!confirm('حذف وظیفه: آیا مطمئن هستید؟ این کار غیرقابل بازگشت است.')) return;
             try {
                 const { error } = await supaClient.from('tasks').delete().eq('id', id);
                 
-                if (error) {
-                    if (error.code === '42501') throw new Error('شما دسترسی حذف وظایف را ندارید (خطای RLS). کدهای SQL باید اجرا شوند.');
-                    throw error;
-                }
+                if (error) throw error;
                 
                 tasksList = tasksList.filter(t => t.id !== id);
                 renderKanban();
-                showToast('وظیفه باموفقیت حذف شد', 'success');
+                showToast('وظیفه از بورد حذف شد', 'info');
             } catch (err) {
-                showToast(err.message || 'خطا در حذف وظیفه', 'error');
+                showToast('دسترسی حذف مسدود است. (نیاز به تنظیم RLS در دیتابیس)', 'error');
             }
         }
 
-        let draggedTaskData = null;
+        // Drag & Drop Physics
+        let draggedTaskId = null;
 
         function drag(ev) {
-            draggedTaskData = ev.target.id;
-            ev.dataTransfer.setData("text", ev.target.id);
+            draggedTaskId = ev.target.closest('.task-card').id;
+            ev.dataTransfer.setData("text", draggedTaskId);
             ev.dataTransfer.effectAllowed = 'move';
-            
-            setTimeout(() => { ev.target.classList.add('dragging'); }, 0);
+            setTimeout(() => { ev.target.closest('.task-card').classList.add('dragging'); }, 0);
         }
 
-        function allowDrop(ev) {
-            ev.preventDefault();
-            ev.dataTransfer.dropEffect = 'move';
-        }
+        function allowDrop(ev) { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; }
 
         function dragEnter(ev) {
             ev.preventDefault();
@@ -588,7 +849,7 @@
             
             col.classList.remove('drag-over');
             
-            const taskId = ev.dataTransfer.getData("text") || draggedTaskData;
+            const taskId = ev.dataTransfer.getData("text") || draggedTaskId;
             if(!taskId) return;
             
             const draggedElement = document.getElementById(taskId);
@@ -605,13 +866,13 @@
 
             if(taskObj && oldStatus !== newStatus) {
                 taskObj.status = newStatus;
-                renderKanban(); 
+                renderKanban(); // Optimistic UI Update
 
                 try {
                     const { error } = await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId);
                     if(error) throw error;
                 } catch(err) {
-                    showToast('خطا در ذخیره وضعیت جدید در سرور', 'error');
+                    showToast('خطا در همگام‌سازی سرور. وضعیت به حالت قبل برگشت.', 'error');
                     taskObj.status = oldStatus;
                     renderKanban();
                 }
@@ -619,7 +880,7 @@
         }
         
         document.addEventListener('dragend', (e) => {
-            draggedTaskData = null;
+            draggedTaskId = null;
             if(e.target.classList) e.target.classList.remove('dragging');
             document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
         });
