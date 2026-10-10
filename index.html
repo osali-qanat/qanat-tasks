@@ -672,7 +672,7 @@
             let visibleTasks = [];
 
             if (isAdmin()) {
-                visibleTasks = baseActive; 
+                visibleTasks = baseActive.filter(t => t.is_approved === true || t.is_approved === 'true'); 
             } else {
                 const myName = getCurrentUserName();
                 visibleTasks = baseActive.filter(t => 
