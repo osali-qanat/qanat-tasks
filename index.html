@@ -801,7 +801,9 @@
                 progress: parseInt(document.getElementById('taskProgress').value),
                 creator_email: currentUser.email // Save who created it
             };
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; btn.disabled = true;
+            
+            const btn = document.getElementById('btn-submit-task');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; btn.disabled = true;
 
             try {
                 if (id) {
