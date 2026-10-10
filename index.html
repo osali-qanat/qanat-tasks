@@ -1002,6 +1002,7 @@
 
             if(window.innerWidth < 1024) toggleSidebar();
             
+            if(tabId === 'kanban') renderKanban();
             if(tabId === 'performance') generatePerformanceCards();
             if(tabId === 'taskcalendar') renderTaskCalendar();
             if(tabId === 'archive') renderArchive();
