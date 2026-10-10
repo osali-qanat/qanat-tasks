@@ -55,10 +55,8 @@
 </head>
 <body class="flex h-[100dvh] w-full relative selection:bg-teal-200 selection:text-teal-900">
 
-    <!-- سیستم هشدارها -->
     <div id="toast-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-2 text-white"></div>
 
-    <!-- صفحه ورود -->
     <div id="auth-screen" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
         <div class="max-w-md w-full glass-panel p-8 rounded-3xl shadow-2xl border border-slate-200 relative overflow-hidden animate-fade-up">
             <div id="connection-status" class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 animate-pulse"></div>
@@ -91,10 +89,8 @@
         </div>
     </div>
 
-    <!-- موبایل اورلی سایدبار -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
 
-    <!-- پنل اصلی داشبورد -->
     <div id="main-dashboard" class="flex-1 flex h-full w-full hidden">
         <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l border-teal-900">
             <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3 bg-teal-950/50">
@@ -132,7 +128,7 @@
                     <i class="fa-solid fa-chart-pie w-5"></i> داشبورد تحلیل داده‌ها
                 </button>
 
-                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4">مدیریت سیستم</div>
+                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4" id="admin-menu-header">مدیریت سیستم</div>
                 <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-amber-900/50 hover:text-white group">
                     <i class="fa-solid fa-clipboard-list w-5 group-hover:text-amber-400"></i> پنل مدیریت (تاییدات)
                 </button>
@@ -179,7 +175,6 @@
 
             <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 relative">
                 
-                <!-- بورد وظایف -->
                 <div id="view-kanban" class="block h-full animate-fade-up">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -231,7 +226,6 @@
                     </div>
                 </div>
 
-                <!-- تقویم سررسید وظایف -->
                 <div id="view-taskcalendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 flex flex-col gap-4">
@@ -251,7 +245,6 @@
                     </div>
                 </div>
 
-                <!-- راندمان تیم -->
                 <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="team-cards-container"></div>
                     
@@ -276,7 +269,6 @@
                     </div>
                 </div>
 
-                <!-- تقویم جلسات -->
                 <div id="view-calendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
@@ -321,7 +313,6 @@
                     </div>
                 </div>
 
-                <!-- داشبورد تحلیل‌ها -->
                 <div id="view-analytics" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
@@ -339,9 +330,7 @@
                     </div>
                 </div>
 
-                <!-- پنل مدیریت سازمانی (تاییدات و بایگانی) -->
                 <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-6">
-                    
                     <!-- بخش درخواست های تایید نشده (ارجاعات) -->
                     <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
                         <div class="p-5 border-b border-amber-100 flex justify-between items-center bg-amber-50/50">
@@ -393,7 +382,6 @@
         </main>
     </div>
 
-    <!-- فرم مودال وظیفه -->
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
@@ -571,7 +559,7 @@
                 if (error) throw error;
                 showToast('هویت تایید شد', 'success');
                 
-                // بازگرداندن دکمه به حالت اول برای ورودهای بعدی
+                // ریست کردن ظاهر دکمه ورود در پس زمینه برای زمانی که کاربر لاگ اوت میکند
                 setTimeout(() => {
                     btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>'; 
                     btn.className = origClass; 
@@ -590,7 +578,7 @@
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('password').value = ''; currentUser = null;
             
-            // ریست کردن کامل فرم و دکمه هنگام خروج
+            // ریست کردن فرم هنگام خروج
             const btn = document.getElementById('login-btn');
             btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
             btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
@@ -607,12 +595,12 @@
 
             if(!isAdmin()) {
                 document.getElementById('tab-btn-archive').style.display = 'none'; // Hide admin panel for normal users
+                document.getElementById('admin-menu-header').style.display = 'none';
             }
             
             fetchTasks(); fetchMeetings();
         }
 
-        // --- Data Fetching & Role Filtering ---
         async function fetchTasks() {
             if(!supaClient) return;
             try {
@@ -656,16 +644,16 @@
                 );
             }
             
-            // Re-render currently active tab
-            const activeTab = document.querySelector('.sidebar-item.active').id;
-            if(activeTab === 'tab-btn-kanban') renderKanban();
-            if(activeTab === 'tab-btn-taskcalendar') renderTaskCalendar();
-            if(activeTab === 'tab-btn-performance') generatePerformanceCards();
-            if(activeTab === 'tab-btn-analytics') renderAnalytics();
-            if(activeTab === 'tab-btn-archive') renderArchive();
+            // Re-render ALL views invisibly so they are ready and fresh when switching tabs
+            renderKanban();
+            renderTaskCalendar();
+            generatePerformanceCards();
+            renderAnalytics();
+            if (isAdmin()) {
+                renderArchive();
+            }
         }
 
-        // --- UI Rendering Functions ---
         function renderKanban() {
             const cols = { 'todo': document.getElementById('col-todo'), 'in_progress': document.getElementById('col-inprogress'), 'done': document.getElementById('col-done') };
             cols.todo.innerHTML = ''; cols.in_progress.innerHTML = ''; cols.done.innerHTML = '';
@@ -697,11 +685,13 @@
 
                 let isPending = (task.is_approved === false || task.is_approved === 'false');
                 let myName = getCurrentUserName();
-                let isReadOnly = !isAdmin() && task.assigned_to !== myName; // قفل کردن برای کسانی که مدیر نیستند و کار به نام آن‌ها نیست
+                // Read Only Logic: 
+                // If you are NOT an admin AND (the task is assigned to someone else OR it's pending for approval)
+                let isReadOnly = !isAdmin() && (task.assigned_to !== myName || isPending); 
                 
                 let pendingBadge = isPending ? `<div class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-300 flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر برای ارجاع</div>` : '';
-                let dragClass = (isPending || isReadOnly) ? 'cursor-not-allowed opacity-80' : 'cursor-grab';
-                let draggable = !(isPending || isReadOnly);
+                let dragClass = isReadOnly ? 'cursor-not-allowed opacity-80' : 'cursor-grab';
+                let draggable = !isReadOnly;
 
                 let actionButtonsHTML = !isReadOnly ? `
                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -747,14 +737,14 @@
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
-        // --- Task Modal & Submit Logic ---
         function openTaskModal(taskId = null) {
             const form = document.getElementById('taskForm');
             form.reset();
             document.getElementById('progressVal').innerText = '0%';
             
             if(taskId) {
-                const task = activeTasksList.find(t => t.id === taskId);
+                // Look in ALL tasks in case manager is editing a pending task from the archive tab
+                const task = allTasksList.find(t => t.id === taskId);
                 if(task) {
                     document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 ml-2"></i>ویرایش وظیفه';
                     document.getElementById('btn-submit-text').innerText = 'بروزرسانی تغییرات';
@@ -789,6 +779,9 @@
         }
 
         async function submitTask() {
+            const btn = document.getElementById('btn-submit-task');
+            if(!btn) return;
+            
             const id = document.getElementById('taskIdHidden').value;
             const assignee = document.getElementById('taskAssignee').value;
             const myName = getCurrentUserName();
@@ -816,8 +809,8 @@
                 creator_email: currentUser.email // Save who created it
             };
             
-            const btn = document.getElementById('btn-submit-task');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; 
+            btn.disabled = true;
 
             try {
                 if (id) {
@@ -836,7 +829,8 @@
                     if (error) throw error;
                     showToast(successMessage, isApproved ? 'success' : 'info');
                 }
-                closeTaskModal(); await fetchTasks();
+                closeTaskModal(); 
+                await fetchTasks();
             } catch (err) {
                 showToast('خطا در ارتباط با دیتابیس', 'error');
             } finally {
@@ -845,7 +839,6 @@
             }
         }
 
-        // --- Manager Approvals & Archives ---
         async function softDeleteTask(id) {
             if(!confirm(isAdmin() ? 'انتقال به سطل زباله؟' : 'درخواست حذف این وظیفه به مدیر ارسال شود؟')) return;
             try {
@@ -895,7 +888,7 @@
                             <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
                             <td class="p-4 font-bold text-slate-600 text-xs text-center">${t.assigned_to || '-'}</td>
                             <td class="p-4 font-bold text-slate-500 text-xs text-center" dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</td>
-                            <td class="p-4 text-left pl-6">
+                            <td class="p-4 text-left pl-6 flex justify-end">
                                 <button onclick="restoreTask('${t.id}')" class="bg-teal-50 text-teal-600 hover:bg-teal-100 px-3 py-1.5 rounded-lg text-xs font-black ml-2 transition">بازگردانی</button>
                                 <button onclick="hardDeleteTask('${t.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-black transition">حذف دائم</button>
                             </td>
@@ -908,7 +901,8 @@
         async function approveTask(id) {
             try {
                 await supaClient.from('tasks').update({ is_approved: true }).eq('id', id);
-                showToast('وظیفه تایید شد و در بورد قرار گرفت', 'success'); await fetchTasks();
+                showToast('وظیفه تایید شد و در بورد قرار گرفت', 'success'); 
+                await fetchTasks();
             } catch(e) { showToast('خطا در تایید وظیفه', 'error'); }
         }
 
@@ -927,16 +921,15 @@
             } catch(e) { showToast('خطا در حذف از سرور', 'error'); }
         }
 
-        // --- Drag & Drop ---
         let draggedTaskId = null;
         function drag(ev) {
             const taskId = ev.target.closest('.task-card').id;
             const taskObj = allTasksList.find(t => t.id === taskId);
             let myName = getCurrentUserName();
-            let isReadOnly = !isAdmin() && taskObj && taskObj.assigned_to !== myName;
+            let isReadOnly = !isAdmin() && taskObj && (taskObj.assigned_to !== myName || taskObj.is_approved === false || taskObj.is_approved === 'false');
 
-            if (taskObj && (taskObj.is_approved === false || taskObj.is_approved === 'false' || isReadOnly)) {
-                ev.preventDefault(); return; // Cannot drag pending or read-only tasks
+            if (isReadOnly) {
+                ev.preventDefault(); return; // Cannot drag read-only tasks
             }
             draggedTaskId = taskId;
             ev.dataTransfer.setData("text", draggedTaskId);
@@ -945,6 +938,7 @@
         function allowDrop(ev) { ev.preventDefault(); }
         function dragEnter(ev) { ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(col) col.classList.add('drag-over'); }
         function dragLeave(ev) { let col = ev.target.closest('.kanban-col'); if(col) col.classList.remove('drag-over'); }
+        
         async function drop(ev) {
             ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(!col) return;
             col.classList.remove('drag-over');
@@ -965,7 +959,6 @@
             document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
         });
 
-        // --- View & Navigation Utilities ---
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -1002,6 +995,7 @@
 
             if(window.innerWidth < 1024) toggleSidebar();
             
+            // Re-render specifically for active view mapping
             if(tabId === 'kanban') renderKanban();
             if(tabId === 'performance') generatePerformanceCards();
             if(tabId === 'taskcalendar') renderTaskCalendar();
@@ -1033,7 +1027,6 @@
             return jalaliDateStr < getTodayJalali();
         }
 
-        // --- Other Render Functions (Meetings, Analytics, Calendar) ---
         async function fetchMeetings() {
             if(!supaClient) return;
             try {
