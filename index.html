@@ -58,6 +58,7 @@
     <!-- سیستم هشدارها -->
     <div id="toast-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-2 text-white"></div>
 
+    <!-- صفحه ورود -->
     <div id="auth-screen" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
         <div class="max-w-md w-full glass-panel p-8 rounded-3xl shadow-2xl border border-slate-200 relative overflow-hidden animate-fade-up">
             <div id="connection-status" class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 animate-pulse"></div>
@@ -73,7 +74,7 @@
                     <label class="block text-xs font-black text-slate-700 mb-1.5">شناسه کاربری (ایمیل)</label>
                     <div class="relative">
                         <i class="fa-solid fa-envelope absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" value="osali5000@gmail.com" required disabled>
+                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="ایمیل سازمانی خود را وارد کنید" required disabled>
                     </div>
                 </div>
                 <div>
@@ -93,6 +94,7 @@
     <!-- موبایل اورلی سایدبار -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
 
+    <!-- پنل اصلی داشبورد -->
     <div id="main-dashboard" class="flex-1 flex h-full w-full hidden">
         <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l border-teal-900">
             <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3 bg-teal-950/50">
@@ -113,10 +115,10 @@
             <nav class="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
                 <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-2 px-4">مدیریت عملیات</div>
                 <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-kanban w-5"></i> بورد مدیریت کارها
+                    <i class="fa-solid fa-kanban w-5"></i> بورد کارهای جاری
                 </button>
                 <button onclick="switchTab('taskcalendar')" id="tab-btn-taskcalendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-regular fa-calendar-check w-5"></i> تقویم وظایف (سررسیدها)
+                    <i class="fa-regular fa-calendar-check w-5"></i> تقویم سررسید وظایف
                 </button>
                 <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
                     <i class="fa-solid fa-handshake w-5"></i> تقویم جلسات دوره‌ای
@@ -131,16 +133,16 @@
                 </button>
 
                 <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4">مدیریت سیستم</div>
-                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-rose-900/50 hover:text-white group">
-                    <i class="fa-solid fa-box-archive w-5 group-hover:text-rose-400"></i> بایگانی و تایید حذف
+                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-amber-900/50 hover:text-white group">
+                    <i class="fa-solid fa-clipboard-list w-5 group-hover:text-amber-400"></i> پنل مدیریت (تاییدات)
                 </button>
             </nav>
             
             <div class="p-4 border-t border-teal-900 bg-teal-950/80">
                 <div class="bg-teal-900/40 rounded-xl p-3 flex items-center gap-3 border border-teal-800/50">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black shadow-inner">ق</div>
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black shadow-inner" id="user-avatar-initial">ق</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] font-black text-white truncate" dir="ltr" id="user-display-name">...</p>
+                        <p class="text-[11px] font-black text-white truncate" id="user-display-name">...</p>
                         <p class="text-[9px] text-teal-400 font-bold uppercase tracking-widest mt-0.5" id="user-role-display">عضو سیستم</p>
                     </div>
                     <button onclick="handleLogout()" class="text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition" title="خروج از سیستم">
@@ -177,11 +179,12 @@
 
             <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 relative">
                 
+                <!-- بورد وظایف -->
                 <div id="view-kanban" class="block h-full animate-fade-up">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-1 h-full bg-slate-400"></div>
-                            <p class="text-[10px] font-black text-slate-500 mb-1 uppercase tracking-wider">وظایف فعال</p>
+                            <p class="text-[10px] font-black text-slate-500 mb-1 uppercase tracking-wider">مجموع وظایف قابل دید</p>
                             <h3 class="text-2xl font-black text-slate-800" id="stat-total">0</h3>
                         </div>
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -228,35 +231,29 @@
                     </div>
                 </div>
 
+                <!-- تقویم سررسید وظایف -->
                 <div id="view-taskcalendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                        <!-- هشدارهای معوقه -->
                         <div class="lg:col-span-1 flex flex-col gap-4">
                             <div class="bg-rose-50 border border-rose-200 rounded-3xl p-6 shadow-sm">
-                                <h3 class="font-black text-rose-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> کارهای معوقه و فراموش شده</h3>
-                                <p class="text-xs font-bold text-rose-600 mb-4">این وظایف از زمان سررسیدشان گذشته است!</p>
-                                <div id="overdue-tasks-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                                    <!-- تزریق جاوا اسکریپت -->
-                                </div>
+                                <h3 class="font-black text-rose-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> کارهای معوقه</h3>
+                                <p class="text-xs font-bold text-rose-600 mb-4">این وظایف از سررسیدشان گذشته است!</p>
+                                <div id="overdue-tasks-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
                             </div>
                         </div>
                         
-                        <!-- تایم لاین آینده -->
                         <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
                             <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                 <h3 class="font-black text-slate-800"><i class="fa-solid fa-calendar-day text-teal-600 ml-2"></i> تایم‌لاین وظایف پیش‌رو</h3>
                             </div>
-                            <div class="p-6 overflow-y-auto space-y-6" id="upcoming-tasks-list">
-                                <!-- تزریق جاوا اسکریپت -->
-                            </div>
+                            <div class="p-6 overflow-y-auto space-y-6" id="upcoming-tasks-list"></div>
                         </div>
                     </div>
                 </div>
 
+                <!-- راندمان تیم -->
                 <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="team-cards-container">
-                        <!-- کارت اعضا اینجا لود میشه -->
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="team-cards-container"></div>
                     
                     <div id="member-detail-section" class="mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 hidden animate-fade-up">
                         <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
@@ -273,14 +270,13 @@
                                         <th class="p-3 font-black text-center rounded-l-xl">سررسید</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100" id="detail-member-tasks">
-                                    <!-- لیست وظایف شخص -->
-                                </tbody>
+                                <tbody class="divide-y divide-slate-100" id="detail-member-tasks"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
+                <!-- تقویم جلسات -->
                 <div id="view-calendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
@@ -318,15 +314,14 @@
 
                         <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full max-h-[80vh]">
                             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h3 class="font-black text-slate-800">جلسات برنامه‌ریزی شده</h3>
+                                <h3 class="font-black text-slate-800">جلسات برنامه‌ریزی شده (دید عمومی)</h3>
                             </div>
-                            <div class="flex-1 p-6 overflow-y-auto space-y-4" id="meetings-list-container">
-                                <!-- جلسات اینجا لود می‌شوند -->
-                            </div>
+                            <div class="flex-1 p-6 overflow-y-auto space-y-4" id="meetings-list-container"></div>
                         </div>
                     </div>
                 </div>
 
+                <!-- داشبورد تحلیل‌ها -->
                 <div id="view-analytics" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
@@ -344,26 +339,51 @@
                     </div>
                 </div>
 
-                <div id="view-archive" class="hidden h-full animate-fade-up flex-col">
-                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
-                        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <!-- پنل مدیریت سازمانی (تاییدات و بایگانی) -->
+                <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-6">
+                    
+                    <!-- بخش درخواست های تایید نشده (ارجاعات) -->
+                    <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
+                        <div class="p-5 border-b border-amber-100 flex justify-between items-center bg-amber-50/50">
                             <div>
-                                <h3 class="font-black text-slate-800 text-rose-700"><i class="fa-solid fa-box-archive ml-2"></i> سطل زباله و تاییدیه حذف (پنل مدیریت)</h3>
-                                <p class="text-xs text-slate-500 font-bold mt-1">کارهایی که توسط اعضا پاک شده‌اند، در اینجا منتظر تایید نهایی مدیر برای حذف دائم یا بازگردانی هستند.</p>
+                                <h3 class="font-black text-slate-800 text-amber-700"><i class="fa-solid fa-clipboard-check ml-2"></i> درخواست‌های نیازمند تایید مدیر</h3>
+                                <p class="text-xs text-slate-500 font-bold mt-1">وظایفی که اعضای تیم برای دیگران ثبت کرده‌اند و منتظر تایید شما جهت ورود به بورد هستند.</p>
                             </div>
                         </div>
-                        <div class="flex-1 p-6 overflow-y-auto">
+                        <div class="flex-1 overflow-y-auto">
                             <table class="w-full text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-100/80">
+                                <thead class="text-slate-500 bg-slate-50 border-b border-slate-100">
                                     <tr>
-                                        <th class="p-4 font-black rounded-r-xl">عنوان کار حذف شده</th>
-                                        <th class="p-4 font-black">شخص مسئول</th>
-                                        <th class="p-4 font-black text-center">تاریخ حذف (تقریبی)</th>
-                                        <th class="p-4 font-black text-left rounded-l-xl">عملیات مدیر</th>
+                                        <th class="p-4 font-black">عنوان وظیفه</th>
+                                        <th class="p-4 font-black text-center">ثبت کننده درخواست</th>
+                                        <th class="p-4 font-black text-center">ارجاع شده به (هدف)</th>
+                                        <th class="p-4 font-black text-left pl-6">عملیات مدیریت</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100" id="archive-table-body">
-                                </tbody>
+                                <tbody class="divide-y divide-slate-100" id="pending-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- بخش سطل زباله (تایید حذف) -->
+                    <div class="bg-white rounded-3xl border border-rose-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
+                        <div class="p-5 border-b border-rose-100 flex justify-between items-center bg-rose-50/50">
+                            <div>
+                                <h3 class="font-black text-slate-800 text-rose-700"><i class="fa-solid fa-trash-can-arrow-up ml-2"></i> سطل زباله و تاییدیه حذف دائم</h3>
+                                <p class="text-xs text-slate-500 font-bold mt-1">کارهایی که اعضا پاک کرده‌اند، برای حذف دائم یا بازگردانی نیازمند تایید مدیر هستند.</p>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto">
+                            <table class="w-full text-right text-sm whitespace-nowrap">
+                                <thead class="text-slate-500 bg-slate-50 border-b border-slate-100">
+                                    <tr>
+                                        <th class="p-4 font-black">عنوان کار حذف شده</th>
+                                        <th class="p-4 font-black text-center">شخص مسئول</th>
+                                        <th class="p-4 font-black text-center">تاریخ اقدام</th>
+                                        <th class="p-4 font-black text-left pl-6">عملیات مدیریت</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100" id="archive-table-body"></tbody>
                             </table>
                         </div>
                     </div>
@@ -373,6 +393,7 @@
         </main>
     </div>
 
+    <!-- فرم مودال وظیفه -->
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
@@ -418,13 +439,13 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-black text-slate-700 mb-1.5">شخص مسئول</label>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">شخص مسئول (ارجاع)</label>
                                 <select id="taskAssignee" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
                                     <option value="تخصیص نیافته">آزاد (بدون مسئول)</option>
-                                    <option value="محمدحسین (مدیر)">محمدحسین (مدیریت)</option>
-                                    <option value="سارا (مالی)">سارا (امور مالی)</option>
-                                    <option value="علی (پشتیبانی)">علی (پشتیبانی اعضا)</option>
-                                    <option value="رضا (فنی)">رضا (فنی)</option>
+                                    <option value="محمدحسین اوصالی (مدیر)">محمدحسین اوصالی (مدیر)</option>
+                                    <option value="علیرضا عباسپور (مدیر)">علیرضا عباسپور (مدیر)</option>
+                                    <option value="علیرضا عمیق">علیرضا عمیق</option>
+                                    <option value="سید محمد حسین موسویان">سید محمد حسین موسویان</option>
                                 </select>
                             </div>
                             <div>
@@ -462,7 +483,7 @@
             <div class="p-6 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-3">
                 <button type="button" onclick="closeTaskModal()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-black text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-100 transition text-sm">انصراف</button>
                 <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-3 rounded-xl font-black text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">ثبت در سیستم</span>
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">ثبت وظیفه</span>
                 </button>
             </div>
         </div>
@@ -472,91 +493,39 @@
         // Init Jalali DatePicker
         jalaliDatepicker.startWatch({ minDate: "attr", maxDate: "attr", time: false, hideAfterChange: true, hasHiddenInput: true });
 
+        // -- Role Based Access Control (RBAC) Config --
+        const MANAGERS_EMAILS = ['osali5000@gmail.com', 'abbaspour@qanat.ir'];
+        const USER_NAMES = {
+            'osali5000@gmail.com': 'محمدحسین اوصالی (مدیر)',
+            'abbaspour@qanat.ir': 'علیرضا عباسپور (مدیر)',
+            'amigh@qanat.ir': 'علیرضا عمیق',
+            'mousavian@qanat.ir': 'سید محمد حسین موسویان'
+        };
+
         // Database Variables
         let supaClient = null;
-        let allTasksList = []; // Includes archived
-        let activeTasksList = []; // Without archived
+        let allTasksList = []; // Includes ALL tasks from DB
+        let activeTasksList = []; // Filtered tasks visible to the CURRENT USER
         let meetingsList = [];
         let currentUser = null;
-        let chartInstances = {}; // For Chart.js
+        let chartInstances = {};
 
-        // Check if admin (simple UI check based on email for now)
-        function isAdmin() { return currentUser && currentUser.email === 'osali5000@gmail.com'; }
-
-        // UI Core
-        function toggleSidebar() {
-            const sidebar = document.getElementById('mainSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar.classList.contains('translate-x-full')) {
-                sidebar.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            } else {
-                sidebar.classList.add('translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
+        // Authentication & Roles Logic
+        function isAdmin() { 
+            return currentUser && MANAGERS_EMAILS.includes(currentUser.email); 
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
-
-            ['kanban', 'taskcalendar', 'performance', 'calendar', 'archive', 'analytics'].forEach(id => {
-                const el = document.getElementById(`view-${id}`);
-                if(el) { el.classList.add('hidden'); el.classList.remove('block', 'flex'); }
-            });
-
-            const targetView = document.getElementById(`view-${tabId}`);
-            targetView.classList.remove('hidden');
-            if(tabId === 'kanban') targetView.classList.add('block'); else targetView.classList.add('flex');
-
-            const titles = { 'kanban': 'بورد مدیریت کارها', 'taskcalendar': 'تقویم سررسید وظایف', 'performance': 'گزارش عملکرد تیم', 'calendar': 'تقویم جلسات دوره‌ای', 'archive': 'بایگانی و مدیریت حذف', 'analytics': 'داشبورد تحلیل داده‌ها' };
-            document.getElementById('page-title').innerText = titles[tabId];
-
-            const headerActions = document.getElementById('header-actions');
-            const searchContainer = document.getElementById('search-container');
-            
-            if(tabId === 'kanban' || tabId === 'taskcalendar') {
-                headerActions.classList.remove('hidden'); searchContainer.classList.remove('hidden');
-            } else {
-                headerActions.classList.add('hidden'); searchContainer.classList.add('hidden');
-            }
-
-            if(window.innerWidth < 1024) toggleSidebar();
-            
-            // Route specific logic
-            if(tabId === 'performance') generatePerformanceCards();
-            if(tabId === 'taskcalendar') renderTaskCalendar();
-            if(tabId === 'archive') renderArchive();
-            if(tabId === 'analytics') renderAnalytics();
-        }
-
-        function showToast(message, type = 'info', persist = false) {
-            const toast = document.getElementById('toast-message');
-            let icon = '<i class="fa-solid fa-circle-info"></i>';
-            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
-            if(type === 'error') { toast.className += 'bg-rose-600 border-2 border-rose-800'; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
-            else if (type === 'success') { toast.className += 'bg-emerald-600 border-2 border-emerald-800'; icon = '<i class="fa-solid fa-circle-check"></i>'; } 
-            else { toast.className += 'bg-teal-800 border-2 border-teal-950'; }
-            toast.innerHTML = icon + ' ' + message;
-            if(!persist) { setTimeout(() => { toast.classList.replace('opacity-100', 'opacity-0'); toast.classList.replace('translate-y-0', 'translate-y-[-2rem]'); }, 4000); }
+        function getCurrentUserName() {
+            if(!currentUser) return 'نامشخص';
+            return USER_NAMES[currentUser.email] || currentUser.email.split('@')[0];
         }
 
         function getInitials(name) {
             if(!name || name === 'تخصیص نیافته') return '?';
-            return name.substring(0, 1).toUpperCase();
+            return name.split(' ')[0].substring(0, 1).toUpperCase();
         }
 
-        function getTodayJalali() {
-            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
-            let [y, m, d] = today.split('/');
-            if(m.length === 1) m = '0'+m;
-            if(d.length === 1) d = '0'+d;
-            return `${y}/${m}/${d}`;
-        }
-
-        function isOverdue(jalaliDateStr) {
-            if(!jalaliDateStr) return false;
-            return jalaliDateStr < getTodayJalali();
-        }
-
+        // Setup Supabase
         const setupSupabase = () => {
             try {
                 supaClient = window.supabase.createClient('https://fsbfdyipycoeykmhiaox.supabase.co', 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh');
@@ -567,8 +536,14 @@
                 document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> ارتباط امن برقرار شد.</span>';
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-emerald-500";
 
+                // Listen to secure auth state changes
                 supaClient.auth.onAuthStateChange((event, session) => {
-                    if (session) { currentUser = session.user; initDashboard(); } else { handleLogoutUI(); }
+                    if (session && session.user) { 
+                        currentUser = session.user; 
+                        initDashboard(); 
+                    } else { 
+                        handleLogoutUI(); 
+                    }
                 });
             } catch (err) { showToast('خطا در تنظیمات پایگاه داده', 'error'); }
         };
@@ -578,14 +553,16 @@
             const script = document.createElement('script');
             script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
             script.onload = setupSupabase;
-            script.onerror = () => { showToast('ارتباط با سرور مسدود است (VPN نیاز است)', 'error'); };
+            script.onerror = () => { showToast('ارتباط مسدود است (VPN نیاز است)', 'error'); };
             document.head.appendChild(script);
         }
 
         async function handleLogin() {
             if(!supaClient) return;
-            const email = document.getElementById('email').value; const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim(); 
+            const password = document.getElementById('password').value;
             const btn = document.getElementById('login-btn'); const origClass = btn.className;
+            
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال اعتبارسنجی...';
             btn.className = "w-full bg-slate-800 text-white font-black rounded-xl p-4 cursor-not-allowed text-sm flex items-center justify-center"; btn.disabled = true;
             try {
@@ -593,12 +570,13 @@
                 if (error) throw error;
                 showToast('هویت تایید شد', 'success');
             } catch (err) {
-                showToast('خطا: ایمیل یا رمز اشتباه است', 'error');
+                showToast('ایمیل یا رمز اشتباه است یا کاربر وجود ندارد', 'error');
                 btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>'; btn.className = origClass; btn.disabled = false;
             }
         }
 
         async function handleLogout() { if(supaClient) await supaClient.auth.signOut(); }
+        
         function handleLogoutUI() {
             document.getElementById('main-dashboard').classList.add('hidden'); document.getElementById('main-dashboard').classList.remove('flex');
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
@@ -608,13 +586,19 @@
         function initDashboard() {
             document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex');
             document.getElementById('main-dashboard').classList.remove('hidden'); document.getElementById('main-dashboard').classList.add('flex');
-            document.getElementById('user-display-name').innerText = currentUser.email.split('@')[0];
-            document.getElementById('user-role-display').innerText = isAdmin() ? 'مدیر سیستم' : 'عضو سیستم';
-            if(!isAdmin()) document.getElementById('tab-btn-archive').style.display = 'none'; // Hide archive from non-admins
+            
+            document.getElementById('user-display-name').innerText = getCurrentUserName();
+            document.getElementById('user-role-display').innerText = isAdmin() ? 'مدیریت کل سیستم' : 'عضو تیم قنات';
+            document.getElementById('user-avatar-initial').innerText = getInitials(getCurrentUserName());
+
+            if(!isAdmin()) {
+                document.getElementById('tab-btn-archive').style.display = 'none'; // Hide admin panel for normal users
+            }
             
             fetchTasks(); fetchMeetings();
         }
 
+        // --- Data Fetching & Role Filtering ---
         async function fetchTasks() {
             if(!supaClient) return;
             try {
@@ -622,25 +606,43 @@
                 if (error) throw error;
                 allTasksList = data || [];
                 filterTasks(); 
-            } catch (err) { showToast('خطا در دریافت وظایف. دیتابیس آپدیت شده؟', 'error'); }
+            } catch (err) { showToast('خطا در دریافت وظایف', 'error'); }
         }
 
         function filterTasks() {
             const query = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
-            // First separate active from archived
-            const baseActive = allTasksList.filter(t => t.is_archived !== true && t.is_archived !== 'true');
             
-            if (!query) {
-                activeTasksList = [...baseActive];
+            // 1. Remove permanently deleted or archived (unless viewing archive)
+            const baseActive = allTasksList.filter(t => t.is_archived !== true && t.is_archived !== 'true');
+            let visibleTasks = [];
+
+            // 2. Apply Role-Based Visibility
+            if (isAdmin()) {
+                visibleTasks = baseActive; // Managers see all un-archived tasks
             } else {
-                activeTasksList = baseActive.filter(t => 
+                const myName = getCurrentUserName();
+                const myEmail = currentUser.email;
+                // Normal users see:
+                // a) Tasks assigned to them AND approved by manager
+                // b) Tasks they created themselves (even if pending for someone else, so they can track them)
+                visibleTasks = baseActive.filter(t => 
+                    (t.assigned_to === myName && (t.is_approved === true || t.is_approved === 'true')) || 
+                    (t.creator_email === myEmail)
+                );
+            }
+            
+            // 3. Apply Search query
+            if (!query) {
+                activeTasksList = [...visibleTasks];
+            } else {
+                activeTasksList = visibleTasks.filter(t => 
                     t.title.toLowerCase().includes(query) || 
                     (t.description && t.description.toLowerCase().includes(query)) ||
                     (t.assigned_to && t.assigned_to.toLowerCase().includes(query))
                 );
             }
             
-            // Re-render currently visible tab
+            // Re-render currently active tab
             const activeTab = document.querySelector('.sidebar-item.active').id;
             if(activeTab === 'tab-btn-kanban') renderKanban();
             if(activeTab === 'tab-btn-taskcalendar') renderTaskCalendar();
@@ -649,13 +651,14 @@
             if(activeTab === 'tab-btn-archive') renderArchive();
         }
 
+        // --- UI Rendering Functions ---
         function renderKanban() {
             const cols = { 'todo': document.getElementById('col-todo'), 'in_progress': document.getElementById('col-inprogress'), 'done': document.getElementById('col-done') };
             cols.todo.innerHTML = ''; cols.in_progress.innerHTML = ''; cols.done.innerHTML = '';
             let counts = { todo: 0, in_progress: 0, done: 0 };
 
             if(activeTasksList.length === 0) {
-                const emptyHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-solid fa-ghost text-4xl mb-3"></i><span class="text-xs font-bold">موردی یافت نشد</span></div>`;
+                const emptyHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-solid fa-ghost text-4xl mb-3"></i><span class="text-xs font-bold">وظیفه‌ای یافت نشد</span></div>`;
                 cols.todo.innerHTML = emptyHTML; cols.in_progress.innerHTML = emptyHTML; cols.done.innerHTML = emptyHTML;
             }
 
@@ -675,13 +678,16 @@
                 let assigneeStr = task.assigned_to && task.assigned_to !== 'تخصیص نیافته' ? task.assigned_to : 'بدون مسئول';
                 let assigneeColor = assigneeStr === 'بدون مسئول' ? 'bg-slate-200 text-slate-500' : 'bg-teal-100 text-teal-800 border border-teal-200';
 
-                // Progress Bar
                 let progress = task.progress || 0;
                 let progColor = progress === 100 ? 'bg-emerald-500' : 'bg-teal-500';
 
+                let isPending = (task.is_approved === false || task.is_approved === 'false');
+                let pendingBadge = isPending ? `<div class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-300 flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر برای ارجاع</div>` : '';
+                let dragClass = isPending ? 'cursor-not-allowed opacity-80' : 'cursor-grab';
+
                 const cardHTML = `
-                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md relative group" draggable="true" ondragstart="drag(event)">
-                        
+                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${!isPending}" ondragstart="drag(event)">
+                        ${pendingBadge}
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[9px] font-black px-2 py-0.5 rounded-md border ${pConfig.bg} flex items-center gap-1"><i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}</span>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -715,6 +721,345 @@
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
+        // --- Task Modal & Submit Logic ---
+        function openTaskModal(taskId = null) {
+            const form = document.getElementById('taskForm');
+            form.reset();
+            document.getElementById('progressVal').innerText = '0%';
+            
+            if(taskId) {
+                const task = activeTasksList.find(t => t.id === taskId);
+                if(task) {
+                    document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 ml-2"></i>ویرایش وظیفه';
+                    document.getElementById('btn-submit-text').innerText = 'بروزرسانی تغییرات';
+                    document.getElementById('taskIdHidden').value = task.id;
+                    document.getElementById('taskStatusHidden').value = task.status;
+                    document.getElementById('taskTitle').value = task.title;
+                    document.getElementById('taskDesc').value = task.description || '';
+                    document.getElementById('taskObstacles').value = task.obstacles || '';
+                    document.getElementById('taskCategory').value = task.category || 'مالی و حسابداری';
+                    document.getElementById('taskPriority').value = task.priority || 'عادی';
+                    document.getElementById('taskAssignee').value = task.assigned_to || 'تخصیص نیافته';
+                    document.getElementById('taskDueDate').value = task.due_date || '';
+                    document.getElementById('taskProgress').value = task.progress || 0;
+                    document.getElementById('progressVal').innerText = (task.progress || 0) + '%';
+                }
+            } else {
+                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>ثبت وظیفه جدید';
+                document.getElementById('btn-submit-text').innerText = 'ثبت در سیستم';
+                document.getElementById('taskIdHidden').value = '';
+                document.getElementById('taskStatusHidden').value = 'todo';
+                // By default, assign to self
+                document.getElementById('taskAssignee').value = getCurrentUserName();
+            }
+
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('taskModal').classList.add('flex');
+        }
+        
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+            document.getElementById('taskModal').classList.remove('flex');
+        }
+
+        async function submitTask() {
+            const id = document.getElementById('taskIdHidden').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const myName = getCurrentUserName();
+            
+            // Workflow Logic: Approval needed?
+            let isApproved = true;
+            let successMessage = 'وظیفه با موفقیت ثبت شد';
+
+            if (!isAdmin() && assignee !== myName) {
+                isApproved = false; // User assigned task to someone else -> Needs approval
+                successMessage = 'درخواست ارجاع کار برای تایید مدیر ارسال شد';
+            }
+
+            const taskData = {
+                title: document.getElementById('taskTitle').value,
+                description: document.getElementById('taskDesc').value,
+                obstacles: document.getElementById('taskObstacles').value,
+                category: document.getElementById('taskCategory').value,
+                priority: document.getElementById('taskPriority').value,
+                assigned_to: assignee,
+                due_date: document.getElementById('taskDueDate').value || null,
+                progress: parseInt(document.getElementById('taskProgress').value),
+                creator_email: currentUser.email // Save who created it
+            };
+            
+            const btn = document.getElementById('btn-submit-task');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; btn.disabled = true;
+
+            try {
+                if (id) {
+                    if (!isAdmin() && assignee !== myName) { taskData.is_approved = false; } // Re-approval if changed
+                    const { error } = await supaClient.from('tasks').update(taskData).eq('id', id);
+                    if (error) throw error;
+                    showToast('تغییرات وظیفه ذخیره شد', 'success');
+                } else {
+                    taskData.status = 'todo'; 
+                    taskData.is_archived = false;
+                    taskData.is_approved = isApproved;
+                    
+                    const { error } = await supaClient.from('tasks').insert([taskData]);
+                    if (error) throw error;
+                    showToast(successMessage, isApproved ? 'success' : 'info');
+                }
+                closeTaskModal(); await fetchTasks();
+            } catch (err) {
+                showToast('خطا در ارتباط با دیتابیس', 'error');
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ثبت وظیفه'; btn.disabled = false;
+            }
+        }
+
+        // --- Manager Approvals & Archives ---
+        async function softDeleteTask(id) {
+            if(!confirm(isAdmin() ? 'انتقال به سطل زباله؟' : 'درخواست حذف این وظیفه به مدیر ارسال شود؟')) return;
+            try {
+                await supaClient.from('tasks').update({ is_archived: true }).eq('id', id);
+                showToast(isAdmin() ? 'به بایگانی منتقل شد' : 'درخواست حذف برای مدیر ارسال شد', 'info');
+                await fetchTasks();
+            } catch (err) { showToast('خطا در انتقال', 'error'); }
+        }
+
+        function renderArchive() {
+            if(!isAdmin()) return;
+
+            // 1. Pending Approvals Table
+            const pendingTbody = document.getElementById('pending-table-body');
+            pendingTbody.innerHTML = '';
+            const pending = allTasksList.filter(t => (t.is_approved === false || t.is_approved === 'false') && t.is_archived !== true);
+            
+            if(pending.length === 0) {
+                pendingTbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">درخواستی برای تایید وجود ندارد.</td></tr>`;
+            } else {
+                pending.forEach(t => {
+                    pendingTbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                            <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
+                            <td class="p-4 font-bold text-slate-600 text-xs text-center" dir="ltr">${t.creator_email}</td>
+                            <td class="p-4 font-black text-teal-700 text-xs text-center">${t.assigned_to}</td>
+                            <td class="p-4 text-left pl-6">
+                                <button onclick="approveTask('${t.id}')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-4 py-2 rounded-xl text-xs font-black transition shadow-sm border border-emerald-200">تایید و ارجاع</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // 2. Archive/Trash Table
+            const archiveTbody = document.getElementById('archive-table-body');
+            archiveTbody.innerHTML = '';
+            const archived = allTasksList.filter(t => t.is_archived === true || t.is_archived === 'true');
+            
+            if(archived.length === 0) {
+                archiveTbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">زباله‌دان خالی است.</td></tr>`;
+            } else {
+                archived.forEach(t => {
+                    archiveTbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                            <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
+                            <td class="p-4 font-bold text-slate-600 text-xs text-center">${t.assigned_to || '-'}</td>
+                            <td class="p-4 font-bold text-slate-500 text-xs text-center" dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</td>
+                            <td class="p-4 text-left pl-6">
+                                <button onclick="restoreTask('${t.id}')" class="bg-teal-50 text-teal-600 hover:bg-teal-100 px-3 py-1.5 rounded-lg text-xs font-black ml-2 transition">بازگردانی</button>
+                                <button onclick="hardDeleteTask('${t.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-black transition">حذف دائم</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function approveTask(id) {
+            try {
+                await supaClient.from('tasks').update({ is_approved: true }).eq('id', id);
+                showToast('وظیفه تایید شد و در بورد قرار گرفت', 'success'); await fetchTasks();
+            } catch(e) { showToast('خطا در تایید وظیفه', 'error'); }
+        }
+
+        async function restoreTask(id) {
+            try {
+                await supaClient.from('tasks').update({ is_archived: false }).eq('id', id);
+                showToast('به بورد اصلی بازگشت', 'success'); await fetchTasks();
+            } catch(e) { showToast('خطا در بازگردانی', 'error'); }
+        }
+
+        async function hardDeleteTask(id) {
+            if(!confirm('اخطار: وظیفه برای همیشه از دیتابیس پاک خواهد شد! مطمئن هستید؟')) return;
+            try {
+                await supaClient.from('tasks').delete().eq('id', id);
+                showToast('حذف دائم با موفقیت انجام شد', 'info'); await fetchTasks();
+            } catch(e) { showToast('خطا در حذف از سرور', 'error'); }
+        }
+
+        // --- Drag & Drop ---
+        let draggedTaskId = null;
+        function drag(ev) {
+            const taskId = ev.target.closest('.task-card').id;
+            const taskObj = allTasksList.find(t => t.id === taskId);
+            if (taskObj && (taskObj.is_approved === false || taskObj.is_approved === 'false')) {
+                ev.preventDefault(); return; // Cannot drag pending tasks
+            }
+            draggedTaskId = taskId;
+            ev.dataTransfer.setData("text", draggedTaskId);
+            setTimeout(() => { ev.target.closest('.task-card').classList.add('dragging'); }, 0);
+        }
+        function allowDrop(ev) { ev.preventDefault(); }
+        function dragEnter(ev) { ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(col) col.classList.add('drag-over'); }
+        function dragLeave(ev) { let col = ev.target.closest('.kanban-col'); if(col) col.classList.remove('drag-over'); }
+        async function drop(ev) {
+            ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(!col) return;
+            col.classList.remove('drag-over');
+            const taskId = ev.dataTransfer.getData("text") || draggedTaskId; if(!taskId) return;
+            const draggedElement = document.getElementById(taskId); if(draggedElement) draggedElement.classList.remove('dragging');
+            const newStatus = col.getAttribute('data-status');
+            const taskObj = allTasksList.find(t => t.id === taskId);
+            
+            if(taskObj && taskObj.status !== newStatus) {
+                let oldStatus = taskObj.status; taskObj.status = newStatus;
+                filterTasks(); 
+                try { await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId); } 
+                catch(err) { taskObj.status = oldStatus; filterTasks(); showToast('خطا در سرور', 'error'); }
+            }
+        }
+        document.addEventListener('dragend', (e) => {
+            draggedTaskId = null; if(e.target.classList) e.target.classList.remove('dragging');
+            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        });
+
+        // --- View & Navigation Utilities ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('translate-x-full')) {
+                sidebar.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+
+            ['kanban', 'taskcalendar', 'performance', 'calendar', 'archive', 'analytics'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                if(el) { el.classList.add('hidden'); el.classList.remove('block', 'flex'); }
+            });
+
+            const targetView = document.getElementById(`view-${tabId}`);
+            targetView.classList.remove('hidden');
+            if(tabId === 'kanban') targetView.classList.add('block'); else targetView.classList.add('flex');
+
+            const titles = { 'kanban': 'بورد مدیریت کارها', 'taskcalendar': 'تقویم سررسید وظایف', 'performance': 'گزارش عملکرد تیم', 'calendar': 'تقویم جلسات دوره‌ای', 'archive': 'پنل تاییدات مدیریت', 'analytics': 'داشبورد تحلیل داده‌ها' };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            const headerActions = document.getElementById('header-actions');
+            const searchContainer = document.getElementById('search-container');
+            if(tabId === 'kanban' || tabId === 'taskcalendar') {
+                headerActions.classList.remove('hidden'); searchContainer.classList.remove('hidden');
+            } else {
+                headerActions.classList.add('hidden'); searchContainer.classList.add('hidden');
+            }
+
+            if(window.innerWidth < 1024) toggleSidebar();
+            
+            if(tabId === 'performance') generatePerformanceCards();
+            if(tabId === 'taskcalendar') renderTaskCalendar();
+            if(tabId === 'archive') renderArchive();
+            if(tabId === 'analytics') renderAnalytics();
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-message');
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
+            if(type === 'error') { toast.className += 'bg-rose-600 border-2 border-rose-800'; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
+            else if (type === 'success') { toast.className += 'bg-emerald-600 border-2 border-emerald-800'; icon = '<i class="fa-solid fa-circle-check"></i>'; } 
+            else { toast.className += 'bg-teal-800 border-2 border-teal-950'; }
+            toast.innerHTML = icon + ' ' + message;
+            setTimeout(() => { toast.classList.replace('opacity-100', 'opacity-0'); toast.classList.replace('translate-y-0', 'translate-y-[-2rem]'); }, 4000);
+        }
+
+        function getTodayJalali() {
+            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
+            let [y, m, d] = today.split('/');
+            if(m.length === 1) m = '0'+m;
+            if(d.length === 1) d = '0'+d;
+            return `${y}/${m}/${d}`;
+        }
+
+        function isOverdue(jalaliDateStr) {
+            if(!jalaliDateStr) return false;
+            return jalaliDateStr < getTodayJalali();
+        }
+
+        // --- Other Render Functions (Meetings, Analytics, Calendar) ---
+        async function fetchMeetings() {
+            if(!supaClient) return;
+            try {
+                const { data } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
+                meetingsList = data || []; renderMeetings();
+            } catch(e) {} 
+        }
+
+        async function submitMeeting() {
+            const newM = {
+                title: document.getElementById('meetingTitle').value,
+                meeting_date: document.getElementById('meetingDate').value,
+                meeting_time: document.getElementById('meetingTime').value,
+                location: document.getElementById('meetingLocation').value,
+                recurring_type: document.getElementById('meetingRecurring').value
+            };
+            const btn = document.getElementById('btn-submit-meeting'); btn.disabled = true;
+            try {
+                await supaClient.from('meetings').insert([newM]);
+                showToast('جلسه در تقویم ثبت شد', 'success');
+                document.getElementById('meetingForm').reset();
+                await fetchMeetings();
+            } catch(e) { showToast('خطا در ثبت جلسه', 'error'); }
+            finally { btn.disabled = false; }
+        }
+
+        async function deleteMeeting(id) {
+            if(confirm(isAdmin() ? 'لغو جلسه؟' : 'فقط مدیر امکان لغو جلسه را دارد. ادامه میدهید؟')) {
+                if(!isAdmin()) return showToast('دسترسی لغو جلسه ندارید', 'error');
+                await supaClient.from('meetings').delete().eq('id', id); await fetchMeetings();
+            }
+        }
+
+        function renderMeetings() {
+            const container = document.getElementById('meetings-list-container'); container.innerHTML = '';
+            if(meetingsList.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 py-6 text-sm font-bold">جلسه‌ای یافت نشد.</div>'; return; }
+
+            meetingsList.forEach(m => {
+                let recBadge = '';
+                if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار هفتگی</span>';
+                if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار ماهانه</span>';
+
+                container.innerHTML += `
+                <div class="flex items-stretch gap-4 group animate-fade-up">
+                    <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
+                        <span class="text-[10px] font-bold">شمسی</span>
+                        <span class="text-sm font-black mt-1" dir="ltr">${m.meeting_date.substring(5)}</span>
+                    </div>
+                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-black text-slate-800 text-sm flex items-center">${recBadge} ${m.title}</h4>
+                            ${isAdmin() ? `<button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-[10px] font-bold text-slate-500 mt-2">
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
+                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || '-'}</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
         function renderTaskCalendar() {
             const upcomingList = document.getElementById('upcoming-tasks-list');
             const overdueList = document.getElementById('overdue-tasks-list');
@@ -722,7 +1067,6 @@
 
             let hasOverdue = false; let hasUpcoming = false;
             
-            // Sort active tasks by date
             const tasksWithDate = activeTasksList.filter(t => t.due_date && t.status !== 'done' && t.status !== 'انجام شده');
             tasksWithDate.sort((a, b) => a.due_date.localeCompare(b.due_date));
 
@@ -740,7 +1084,6 @@
 
                 if(isOverdue(t.due_date)) {
                     hasOverdue = true;
-                    // Red styling for overdue
                     html = html.replace('border-teal-500', 'border-rose-500').replace('hover:border-teal-400', 'hover:border-rose-500').replace('text-slate-600', 'text-rose-600');
                     overdueList.innerHTML += html;
                 } else {
@@ -780,15 +1123,15 @@
                 score = Math.max(0, Math.round(score - (d.overdue * 3))); // penalty
                 
                 let color = score > 75 ? 'emerald' : (score > 40 ? 'amber' : 'rose');
-                let initials = u === 'بدون مسئول' ? '؟' : u.substring(0,1);
+                let initials = getInitials(u);
 
                 container.innerHTML += `
                     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition cursor-pointer flex flex-col" onclick="showUserTasks('${u}')">
                         <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
                             <div class="w-12 h-12 rounded-2xl bg-${color}-100 text-${color}-700 flex items-center justify-center text-lg font-black">${initials}</div>
                             <div>
-                                <h4 class="font-black text-slate-800">${u}</h4>
-                                <p class="text-[10px] font-bold text-slate-500">راندمان سیستم: <span class="text-${color}-600 text-sm">${score}%</span></p>
+                                <h4 class="font-black text-slate-800">${u.split(' ')[0]}</h4>
+                                <p class="text-[10px] font-bold text-slate-500">راندمان عملکرد: <span class="text-${color}-600 text-sm">${score}%</span></p>
                             </div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
@@ -825,195 +1168,10 @@
             section.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function openTaskModal(taskId = null) {
-            const form = document.getElementById('taskForm');
-            form.reset();
-            document.getElementById('progressVal').innerText = '0%';
-            
-            if(taskId) {
-                const task = activeTasksList.find(t => t.id === taskId);
-                if(task) {
-                    document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 ml-2"></i>ویرایش وظیفه';
-                    document.getElementById('btn-submit-text').innerText = 'بروزرسانی تغییرات';
-                    document.getElementById('taskIdHidden').value = task.id;
-                    document.getElementById('taskStatusHidden').value = task.status;
-                    document.getElementById('taskTitle').value = task.title;
-                    document.getElementById('taskDesc').value = task.description || '';
-                    document.getElementById('taskObstacles').value = task.obstacles || '';
-                    document.getElementById('taskCategory').value = task.category || 'مالی و حسابداری';
-                    document.getElementById('taskPriority').value = task.priority || 'عادی';
-                    document.getElementById('taskAssignee').value = task.assigned_to || 'تخصیص نیافته';
-                    document.getElementById('taskDueDate').value = task.due_date || '';
-                    document.getElementById('taskProgress').value = task.progress || 0;
-                    document.getElementById('progressVal').innerText = (task.progress || 0) + '%';
-                }
-            } else {
-                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>فرم جامع وظیفه';
-                document.getElementById('btn-submit-text').innerText = 'ثبت در سیستم';
-                document.getElementById('taskIdHidden').value = '';
-                document.getElementById('taskStatusHidden').value = 'todo';
-            }
-
-            document.getElementById('taskModal').classList.remove('hidden');
-            document.getElementById('taskModal').classList.add('flex');
-        }
-        
-        function closeTaskModal() {
-            document.getElementById('taskModal').classList.add('hidden');
-            document.getElementById('taskModal').classList.remove('flex');
-        }
-
-        async function submitTask() {
-            const id = document.getElementById('taskIdHidden').value;
-            const taskData = {
-                title: document.getElementById('taskTitle').value,
-                description: document.getElementById('taskDesc').value,
-                obstacles: document.getElementById('taskObstacles').value,
-                category: document.getElementById('taskCategory').value,
-                priority: document.getElementById('taskPriority').value,
-                assigned_to: document.getElementById('taskAssignee').value,
-                due_date: document.getElementById('taskDueDate').value || null,
-                progress: parseInt(document.getElementById('taskProgress').value)
-            };
-            
-            const btn = document.getElementById('btn-submit-task');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; btn.disabled = true;
-
-            try {
-                if (id) {
-                    const { error } = await supaClient.from('tasks').update(taskData).eq('id', id);
-                    if (error) throw error;
-                    showToast('تغییرات ذخیره شد', 'success');
-                } else {
-                    taskData.status = 'todo'; taskData.is_archived = false;
-                    const { error } = await supaClient.from('tasks').insert([taskData]);
-                    if (error) throw error;
-                    showToast('وظیفه جدید ثبت شد', 'success');
-                }
-                closeTaskModal(); await fetchTasks();
-            } catch (err) {
-                showToast('خطا: کدهای SQL مرحله اول را در دیتابیس اجرا کرده‌اید؟', 'error', true);
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> ثبت'; btn.disabled = false;
-            }
-        }
-
-        async function softDeleteTask(id) {
-            if(!confirm('آیا مایلید این وظیفه را به سطل زباله (بایگانی) منتقل کنید؟ مدیر می‌تواند آن را تایید یا بازگردانی کند.')) return;
-            try {
-                const { error } = await supaClient.from('tasks').update({ is_archived: true }).eq('id', id);
-                if (error) throw error;
-                showToast('به بایگانی منتقل شد', 'info');
-                await fetchTasks();
-            } catch (err) { showToast('خطا در انتقال به بایگانی', 'error'); }
-        }
-
-        function renderArchive() {
-            const tbody = document.getElementById('archive-table-body');
-            tbody.innerHTML = '';
-            const archived = allTasksList.filter(t => t.is_archived === true || t.is_archived === 'true');
-            
-            if(archived.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">زباله‌دان خالی است.</td></tr>`; return;
-            }
-
-            archived.forEach(t => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                        <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
-                        <td class="p-4 font-bold text-slate-600 text-xs">${t.assigned_to || '-'}</td>
-                        <td class="p-4 font-bold text-slate-500 text-xs text-center" dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</td>
-                        <td class="p-4 text-left">
-                            <button onclick="restoreTask('${t.id}')" class="bg-teal-50 text-teal-600 hover:bg-teal-100 px-3 py-1.5 rounded-lg text-xs font-black ml-2 transition">بازگردانی</button>
-                            <button onclick="hardDeleteTask('${t.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-black transition">حذف دائم</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function restoreTask(id) {
-            try {
-                await supaClient.from('tasks').update({ is_archived: false }).eq('id', id);
-                showToast('به بورد اصلی بازگشت', 'success'); await fetchTasks();
-            } catch(e) { showToast('خطا در بازگردانی', 'error'); }
-        }
-
-        async function hardDeleteTask(id) {
-            if(!confirm('اخطار: وظیفه برای همیشه از دیتابیس پاک خواهد شد! مطمئن هستید؟')) return;
-            try {
-                await supaClient.from('tasks').delete().eq('id', id);
-                showToast('حذف دائم با موفقیت انجام شد', 'info'); await fetchTasks();
-            } catch(e) { showToast('شما دسترسی حذف دائم از دیتابیس را ندارید (مختص ادمین)', 'error'); }
-        }
-
-        async function fetchMeetings() {
-            if(!supaClient) return;
-            try {
-                const { data } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
-                meetingsList = data || []; renderMeetings();
-            } catch(e) {} // Silent fail on initial load
-        }
-
-        async function submitMeeting() {
-            const newM = {
-                title: document.getElementById('meetingTitle').value,
-                meeting_date: document.getElementById('meetingDate').value,
-                meeting_time: document.getElementById('meetingTime').value,
-                location: document.getElementById('meetingLocation').value,
-                recurring_type: document.getElementById('meetingRecurring').value
-            };
-            const btn = document.getElementById('btn-submit-meeting'); btn.disabled = true;
-            try {
-                const { error } = await supaClient.from('meetings').insert([newM]);
-                if(error) throw error;
-                showToast('جلسه در تقویم ثبت شد', 'success');
-                document.getElementById('meetingForm').reset();
-                await fetchMeetings();
-            } catch(e) { showToast('خطا در ثبت جلسه. آیا کد SQL مرحله دوم را زدید؟', 'error'); }
-            finally { btn.disabled = false; }
-        }
-
-        async function deleteMeeting(id) {
-            if(confirm('لغو جلسه؟')) {
-                await supaClient.from('meetings').delete().eq('id', id); await fetchMeetings();
-            }
-        }
-
-        function renderMeetings() {
-            const container = document.getElementById('meetings-list-container'); container.innerHTML = '';
-            if(meetingsList.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 py-6 text-sm font-bold">جلسه‌ای یافت نشد.</div>'; return; }
-
-            meetingsList.forEach(m => {
-                let recBadge = '';
-                if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار هفتگی</span>';
-                if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار ماهانه</span>';
-
-                container.innerHTML += `
-                <div class="flex items-stretch gap-4 group animate-fade-up">
-                    <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
-                        <span class="text-[10px] font-bold">شمسی</span>
-                        <span class="text-sm font-black mt-1" dir="ltr">${m.meeting_date.substring(5)}</span>
-                    </div>
-                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-black text-slate-800 text-sm flex items-center">${recBadge} ${m.title}</h4>
-                            <button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>
-                        </div>
-                        <div class="flex flex-wrap gap-4 text-[10px] font-bold text-slate-500 mt-2">
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || '-'}</span>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        }
-
         function renderAnalytics() {
             if (chartInstances['status']) chartInstances['status'].destroy();
             if (chartInstances['workload']) chartInstances['workload'].destroy();
 
-            // Status Data
             let sTodo=0, sIp=0, sDone=0;
             activeTasksList.forEach(t => {
                 if(t.status === 'todo') sTodo++;
@@ -1031,10 +1189,9 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } } } }
             });
 
-            // Workload Data
             let users = {};
             activeTasksList.forEach(t => {
-                let u = t.assigned_to || 'آزاد';
+                let u = (t.assigned_to || 'آزاد').split(' ')[0];
                 users[u] = (users[u] || 0) + 1;
             });
             const uLabels = Object.keys(users); const uData = Object.values(users);
@@ -1049,38 +1206,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Vazirmatn' } } } } }
             });
         }
-
-        let draggedTaskId = null;
-        function drag(ev) {
-            draggedTaskId = ev.target.closest('.task-card').id;
-            ev.dataTransfer.setData("text", draggedTaskId);
-            setTimeout(() => { ev.target.closest('.task-card').classList.add('dragging'); }, 0);
-        }
-        function allowDrop(ev) { ev.preventDefault(); }
-        function dragEnter(ev) { ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(col) col.classList.add('drag-over'); }
-        function dragLeave(ev) { let col = ev.target.closest('.kanban-col'); if(col) col.classList.remove('drag-over'); }
-        async function drop(ev) {
-            ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(!col) return;
-            col.classList.remove('drag-over');
-            const taskId = ev.dataTransfer.getData("text") || draggedTaskId; if(!taskId) return;
-            const draggedElement = document.getElementById(taskId); if(draggedElement) draggedElement.classList.remove('dragging');
-            const newStatus = col.getAttribute('data-status');
-            const taskObj = allTasksList.find(t => t.id === taskId);
-            
-            if(taskObj && taskObj.status !== newStatus) {
-                let oldStatus = taskObj.status; taskObj.status = newStatus;
-                filterTasks(); // UI updates instantly
-                try {
-                    await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId);
-                } catch(err) {
-                    showToast('خطا در ارتباط با سرور', 'error'); taskObj.status = oldStatus; filterTasks();
-                }
-            }
-        }
-        document.addEventListener('dragend', (e) => {
-            draggedTaskId = null; if(e.target.classList) e.target.classList.remove('dragging');
-            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
-        });
     </script>
 </body>
 </html>
