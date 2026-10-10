@@ -646,6 +646,9 @@
             if(!isAdmin()) {
                 document.getElementById('tab-btn-archive').style.display = 'none'; // Hide admin panel for normal users
                 document.getElementById('admin-menu-header').style.display = 'none';
+            } else {
+                document.getElementById('tab-btn-archive').style.display = ''; // Show admin panel for managers
+                document.getElementById('admin-menu-header').style.display = '';
             }
             
             fetchTasks(); fetchMeetings();
