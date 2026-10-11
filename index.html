@@ -51,6 +51,11 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 10px; }
         
         jdp-container { z-index: 9999 !important; font-family: 'Vazirmatn', sans-serif !important; }
+
+        /* Calendar specific styles */
+        .cal-cell { transition: all 0.2s; min-height: 100px; }
+        .cal-cell:hover { background-color: #f8fafc; border-color: #0d9488; cursor: pointer; }
+        .cal-cell.today { background-color: #f0fdfa; border-color: #14b8a6; border-width: 2px; }
     </style>
 </head>
 <body class="flex h-[100dvh] w-full relative selection:bg-teal-200 selection:text-teal-900">
@@ -83,10 +88,10 @@
             </div>
             <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-black text-slate-700 mb-1.5">شناسه کاربری (ایمیل)</label>
+                    <label class="block text-xs font-black text-slate-700 mb-1.5">شناسه کاربری (ایمیل سازمانی)</label>
                     <div class="relative">
                         <i class="fa-solid fa-envelope absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="ایمیل سازمانی خود را وارد کنید" required disabled>
+                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="example@qanat.ir" required disabled>
                     </div>
                 </div>
                 <div>
@@ -198,7 +203,6 @@
 
             <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 relative">
                 
-                <!-- View: Kanban -->
                 <div id="view-kanban" class="block h-full animate-fade-up">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -250,27 +254,40 @@
                     </div>
                 </div>
 
-                <!-- View: Task Calendar -->
-                <div id="view-taskcalendar" class="hidden h-full animate-fade-up">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                        <div class="lg:col-span-1 flex flex-col gap-4">
-                            <div class="bg-rose-50 border border-rose-200 rounded-3xl p-6 shadow-sm">
-                                <h3 class="font-black text-rose-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> کارهای معوقه</h3>
-                                <p class="text-xs font-bold text-rose-600 mb-4">این وظایف از سررسیدشان گذشته است!</p>
-                                <div id="overdue-tasks-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
-                            </div>
+                <div id="view-taskcalendar" class="hidden h-full animate-fade-up flex-col gap-4">
+                    
+                    <div class="bg-white border border-slate-200 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="setCalView('month')" id="cal-btn-month" class="px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700">نمای ماهانه</button>
+                            <button onclick="setCalView('week')" id="cal-btn-week" class="px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700">نمای هفتگی</button>
                         </div>
                         
-                        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-                            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                <h3 class="font-black text-slate-800"><i class="fa-solid fa-calendar-day text-teal-600 ml-2"></i> تایم‌لاین وظایف پیش‌رو</h3>
-                            </div>
-                            <div class="p-6 overflow-y-auto space-y-6" id="upcoming-tasks-list"></div>
+                        <div class="flex items-center gap-4">
+                            <button onclick="changeCalDate(-1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-right"></i></button>
+                            <h3 id="cal-header-title" class="font-black text-slate-800 text-base min-w-[120px] text-center">آبان 1403</h3>
+                            <button onclick="changeCalDate(1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-left"></i></button>
+                        </div>
+                        
+                        <button onclick="resetCalToToday()" class="px-4 py-2 text-xs font-black bg-teal-50 text-teal-700 rounded-xl hover:bg-teal-100 transition border border-teal-200">امروز</button>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm flex-1 overflow-hidden flex flex-col">
+                        <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">شنبه</div>
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">یک‌شنبه</div>
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">دوشنبه</div>
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">سه‌شنبه</div>
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">چهارشنبه</div>
+                            <div class="py-3 text-center font-black text-slate-500 text-xs">پنج‌شنبه</div>
+                            <div class="py-3 text-center font-black text-rose-500 text-xs">جمعه</div>
+                        </div>
+                        <div id="cal-grid" class="flex-1 overflow-y-auto grid grid-cols-7 bg-slate-200 gap-[1px]">
+                            <!-- Calendar cells will be injected here -->
                         </div>
                     </div>
+
                 </div>
                 
-                <!-- View: Tracking -->
                 <div id="view-tracking" class="hidden h-full animate-fade-up flex-col gap-6">
                     <div class="bg-white rounded-3xl border border-indigo-200 shadow-sm flex-1 overflow-hidden flex flex-col">
                         <div class="p-5 border-b border-indigo-100 flex justify-between items-center bg-indigo-50/50">
@@ -296,7 +313,6 @@
                     </div>
                 </div>
 
-                <!-- View: Performance -->
                 <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="team-cards-container"></div>
                     
@@ -321,7 +337,6 @@
                     </div>
                 </div>
 
-                <!-- View: Meetings Calendar -->
                 <div id="view-calendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
@@ -366,7 +381,6 @@
                     </div>
                 </div>
 
-                <!-- View: Analytics Dashboard -->
                 <div id="view-analytics" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
@@ -384,7 +398,6 @@
                     </div>
                 </div>
 
-                <!-- View: Admin Archive / Approvals -->
                 <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-6">
                     <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
                         <div class="p-5 border-b border-amber-100 flex justify-between items-center bg-amber-50/50">
@@ -435,7 +448,6 @@
         </main>
     </div>
 
-    <!-- Task Modal Form -->
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
@@ -529,7 +541,6 @@
         </div>
     </div>
 
-    <!-- Script Application Logic -->
     <script>
         // Init Jalali DatePicker
         jalaliDatepicker.startWatch({ minDate: "attr", maxDate: "attr", time: false, hideAfterChange: true, hasHiddenInput: true });
@@ -543,6 +554,43 @@
             'mousavian@qanat.ir': 'سید محمد حسین موسویان'
         };
 
+        // -- Jalali Calendar Micro-Library --
+        const JalaliUtils = {
+            isLeapYear: function(jy) { return ((jy % 33) * 8 + 24) % 33 < 8; },
+            daysInMonth: function(jy, jm) {
+                if(jm <= 6) return 31;
+                if(jm <= 11) return 30;
+                return this.isLeapYear(jy) ? 30 : 29;
+            },
+            toGregorian: function(jy, jm, jd) {
+                var gy = (jy <= 979) ? 621 : 1600;
+                jy -= (jy <= 979) ? 0 : 979;
+                var days = (365 * jy) + Math.floor(jy / 33) * 8 + Math.floor((jy % 33 + 3) / 4) + 78 + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+                gy += 400 * Math.floor(days / 146097);
+                days %= 146097;
+                if (days > 36524) { gy += 100 * Math.floor(--days / 36524); days %= 36524; if (days >= 365) days++; }
+                gy += 4 * Math.floor(days / 1461);
+                days %= 1461;
+                if (days > 365) { gy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+                var gd = days + 1;
+                var sal_a = [0, 31, ((gy % 4 == 0 && gy % 100 != 0) || (gy % 400 == 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                var gm;
+                for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
+                return new Date(gy, gm - 1, gd);
+            },
+            getToday: function() {
+                const date = new Date();
+                const option = { calendar: 'persian', numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit' };
+                let formatter = new Intl.DateTimeFormat('fa-IR', option);
+                let parts = formatter.formatToParts(date);
+                return {
+                    y: parseInt(parts.find(p => p.type === 'year').value),
+                    m: parseInt(parts.find(p => p.type === 'month').value),
+                    d: parseInt(parts.find(p => p.type === 'day').value)
+                }
+            }
+        };
+
         // Database Variables
         let supaClient = null;
         let allTasksList = []; 
@@ -553,6 +601,10 @@
         let confirmCallback = null;
         let lastDataHash = '';
         let pollingInterval = null;
+
+        // Calendar State
+        let calState = { view: 'month', year: 1403, month: 8, day: 1 };
+        const monthNames = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
 
         function isAdmin() { 
             return currentUser && MANAGERS_EMAILS.includes(currentUser.email.toLowerCase()); 
@@ -569,7 +621,6 @@
         }
 
         // --- Date Normalization for Flawless Overdue Logic ---
-        // Ensuring all dates are formatted exactly as YYYY/MM/DD to allow string comparison
         function normalizeJalaliDate(dateStr) {
             if(!dateStr) return '';
             let parts = dateStr.split('/');
@@ -580,22 +631,16 @@
             return `${y}/${m}/${d}`;
         }
 
-        function getTodayJalali() {
-            const date = new Date();
-            const option = { calendar: 'persian', numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit' };
-            let formatter = new Intl.DateTimeFormat('fa-IR', option);
-            let parts = formatter.formatToParts(date);
-            let y = parts.find(p => p.type === 'year').value;
-            let m = parts.find(p => p.type === 'month').value.padStart(2, '0');
-            let d = parts.find(p => p.type === 'day').value.padStart(2, '0');
-            return `${y}/${m}/${d}`;
+        function getTodayJalaliStr() {
+            const t = JalaliUtils.getToday();
+            return `${t.y}/${t.m.toString().padStart(2, '0')}/${t.d.toString().padStart(2, '0')}`;
         }
 
         function isOverdue(dateString) {
             if (!dateString) return false;
-            const today = getTodayJalali();
+            const today = getTodayJalaliStr();
             const normalizedTarget = normalizeJalaliDate(dateString);
-            return normalizedTarget < today; // Now '1403/08/05' < '1403/08/12' correctly computes!
+            return normalizedTarget < today; 
         }
 
         // --- Core Supabase ---
@@ -633,7 +678,6 @@
 
         async function handleLogin() {
             if(!supaClient) return;
-            // Standardize email input to fix case issues
             const email = document.getElementById('email').value.trim().toLowerCase(); 
             const password = document.getElementById('password').value;
             const btn = document.getElementById('login-btn'); 
@@ -648,7 +692,6 @@
                 showToast('هویت تایید شد', 'success');
             } catch (err) {
                 showToast('ایمیل یا رمز اشتباه است یا کاربر وجود ندارد', 'error');
-                // Reset form button on error
                 setTimeout(() => {
                     btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
                     btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
@@ -688,17 +731,20 @@
                 document.getElementById('admin-menu-header').style.display = 'block';
             }
             
+            const today = JalaliUtils.getToday();
+            calState = { view: 'month', year: today.y, month: today.m, day: today.d };
+
             switchTab('kanban'); 
             fetchTasks(false); 
             fetchMeetings();
 
-            // Setup Smart Polling for "Realtime" feel without WebSocket errors
+            // Smart Polling
             if(!pollingInterval) {
                 pollingInterval = setInterval(() => {
                     if (currentUser && document.visibilityState === 'visible') {
-                        fetchTasks(true); // silent fetch
+                        fetchTasks(true); 
                     }
-                }, 10000); // Update every 10 seconds silently
+                }, 10000); 
             }
         }
 
@@ -715,7 +761,6 @@
                     lastDataHash = newHash;
                     filterTasks(); 
                 } else if(!isSilent) {
-                    // Force UI update if manual refresh button clicked
                     filterTasks();
                 }
             } catch (err) { 
@@ -765,14 +810,35 @@
             }
             
             renderKanban();
-            renderTaskCalendar();
+            renderCalendarView();
             generatePerformanceCards();
             renderAnalytics();
             renderTracking();
             if (isAdmin()) { renderArchive(); }
         }
 
-        // --- Render Functions ---
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-message');
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
+            
+            if(type === 'error') {
+                toast.className += 'bg-rose-600 border-2 border-rose-800';
+                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else if (type === 'success') {
+                toast.className += 'bg-emerald-600 border-2 border-emerald-800';
+                icon = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                toast.className += 'bg-teal-800 border-2 border-teal-950';
+            }
+            toast.innerHTML = icon + ' ' + message;
+            setTimeout(() => {
+                toast.classList.replace('opacity-100', 'opacity-0');
+                toast.classList.replace('translate-y-0', 'translate-y-[-2rem]');
+            }, 4000);
+        }
+
+        // --- View Renders ---
         function renderTracking() {
             const tbody = document.getElementById('tracking-table-body');
             if(!tbody || !currentUser) return;
@@ -802,7 +868,7 @@
                 let assigneeStr = t.assigned_to && t.assigned_to !== 'تخصیص نیافته' ? t.assigned_to : 'آزاد (بدون مسئول)';
 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0 cursor-pointer" onclick="openTaskModal('${t.id}')">
                         <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
                         <td class="p-4 font-bold text-slate-600 text-xs text-center">${assigneeStr}</td>
                         <td class="p-4 text-center">${approvalBadge}</td>
@@ -894,8 +960,215 @@
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
+        // --- Interactive Calendar Logic ---
+        function setCalView(view) {
+            calState.view = view;
+            document.getElementById('cal-btn-month').className = view === 'month' ? 'px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700' : 'px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700';
+            document.getElementById('cal-btn-week').className = view === 'week' ? 'px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700' : 'px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700';
+            renderCalendarView();
+        }
+
+        function changeCalDate(offset) {
+            if(calState.view === 'month') {
+                calState.month += offset;
+                if(calState.month > 12) { calState.month = 1; calState.year++; }
+                else if(calState.month < 1) { calState.month = 12; calState.year--; }
+            } else {
+                calState.day += offset * 7;
+                while(calState.day > JalaliUtils.daysInMonth(calState.year, calState.month)) {
+                    calState.day -= JalaliUtils.daysInMonth(calState.year, calState.month);
+                    calState.month++;
+                    if(calState.month > 12) { calState.month = 1; calState.year++; }
+                }
+                while(calState.day < 1) {
+                    calState.month--;
+                    if(calState.month < 1) { calState.month = 12; calState.year--; }
+                    calState.day += JalaliUtils.daysInMonth(calState.year, calState.month);
+                }
+            }
+            renderCalendarView();
+        }
+
+        function resetCalToToday() {
+            const t = JalaliUtils.getToday();
+            calState.year = t.y; calState.month = t.m; calState.day = t.d;
+            renderCalendarView();
+        }
+
+        function renderCalendarView() {
+            document.getElementById('cal-header-title').innerText = `${monthNames[calState.month - 1]} ${calState.year}`;
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = '';
+
+            const daysInMonth = JalaliUtils.daysInMonth(calState.year, calState.month);
+            let firstDayGregorian = JalaliUtils.toGregorian(calState.year, calState.month, 1);
+            let startWeekDay = (firstDayGregorian.getDay() + 1) % 7; // 0=Sat, 6=Fri
+
+            let cells = [];
+            for (let i = 0; i < startWeekDay; i++) {
+                cells.push(`<div class="bg-slate-50/50 min-h-[100px] border-b border-l border-slate-100"></div>`);
+            }
+
+            const todayStr = getTodayJalaliStr();
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                let cellDateStr = `${calState.year}/${calState.month.toString().padStart(2,'0')}/${d.toString().padStart(2,'0')}`;
+                let isToday = cellDateStr === todayStr;
+                
+                // Find tasks for this day
+                let dayTasks = activeTasksList.filter(t => normalizeJalaliDate(t.due_date) === cellDateStr);
+                
+                let tasksHtml = '';
+                dayTasks.forEach(t => {
+                    let s = t.status;
+                    let color = 'bg-slate-100 text-slate-700';
+                    if (s === 'done' || s === 'انجام شده') color = 'bg-emerald-100 text-emerald-700';
+                    else if (isOverdue(cellDateStr)) color = 'bg-rose-100 text-rose-700 animate-pulse';
+                    else if (s === 'in_progress' || s === 'در دست اقدام') color = 'bg-amber-100 text-amber-700';
+                    else if (t.priority === 'فوری') color = 'bg-rose-100 text-rose-700';
+                    
+                    let icon = s === 'done' || s === 'انجام شده' ? 'fa-check' : (isOverdue(cellDateStr) ? 'fa-triangle-exclamation' : 'fa-circle-dot');
+
+                    tasksHtml += `<div onclick="event.stopPropagation(); openTaskModal('${t.id}')" class="text-[9px] font-black p-1 rounded mb-1 truncate ${color} border border-white/20 shadow-sm hover:shadow-md transition" title="${t.title}"><i class="fa-solid ${icon} mr-0.5"></i> ${t.title}</div>`;
+                });
+
+                cells.push(`
+                    <div onclick="openTaskModal(null, '${cellDateStr}')" class="cal-cell bg-white border-b border-l border-slate-100 p-1 flex flex-col relative group ${isToday ? 'today' : ''}">
+                        <div class="text-xs font-black text-slate-500 mb-1 w-6 h-6 flex items-center justify-center rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition ${isToday ? 'bg-teal-600 text-white' : ''}">${d}</div>
+                        <div class="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">${tasksHtml}</div>
+                    </div>
+                `);
+            }
+
+            // Fill remainder
+            while (cells.length % 7 !== 0) {
+                cells.push(`<div class="bg-slate-50/50 min-h-[100px] border-b border-l border-slate-100"></div>`);
+            }
+
+            if(calState.view === 'week') {
+                // Find which chunk of 7 contains calState.day
+                let targetIndex = startWeekDay + calState.day - 1;
+                let chunkStart = Math.floor(targetIndex / 7) * 7;
+                cells = cells.slice(chunkStart, chunkStart + 7);
+            }
+
+            grid.innerHTML = cells.join('');
+        }
+
+        // --- Performance ---
+        function generatePerformanceCards() {
+            const container = document.getElementById('team-cards-container');
+            container.innerHTML = '';
+            
+            let users = {};
+            activeTasksList.forEach(t => {
+                let u = t.assigned_to || 'بدون مسئول';
+                if(!users[u]) users[u] = { total: 0, done: 0, ip: 0, overdue: 0, list: [] };
+                users[u].total++;
+                users[u].list.push(t);
+                if(t.status === 'done' || t.status === 'انجام شده') users[u].done++;
+                else {
+                    users[u].ip++;
+                    if(t.due_date && isOverdue(t.due_date)) users[u].overdue++;
+                }
+            });
+
+            if(Object.keys(users).length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold">اطلاعاتی یافت نشد.</div>`; return;
+            }
+
+            Object.keys(users).forEach(u => {
+                let d = users[u];
+                let score = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0;
+                score = Math.max(0, Math.round(score - (d.overdue * 3))); // penalty
+                
+                let color = score > 75 ? 'emerald' : (score > 40 ? 'amber' : 'rose');
+                let initials = getInitials(u);
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition cursor-pointer flex flex-col" onclick="showUserTasks('${u}')">
+                        <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-${color}-100 text-${color}-700 flex items-center justify-center text-lg font-black">${initials}</div>
+                            <div>
+                                <h4 class="font-black text-slate-800">${u.split(' ')[0]}</h4>
+                                <p class="text-[10px] font-bold text-slate-500">راندمان عملکرد: <span class="text-${color}-600 text-sm">${score}%</span></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+                            <div class="bg-slate-50 p-2 rounded-xl text-slate-600"><div class="text-sm font-black">${d.total}</div>کل</div>
+                            <div class="bg-emerald-50 p-2 rounded-xl text-emerald-700"><div class="text-sm font-black">${d.done}</div>تکمیل</div>
+                            <div class="bg-rose-50 p-2 rounded-xl text-rose-700"><div class="text-sm font-black">${d.overdue}</div>تاخیر</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showUserTasks(username) {
+            const section = document.getElementById('member-detail-section');
+            document.getElementById('detail-member-name').innerText = `وظایف: ${username}`;
+            const tbody = document.getElementById('detail-member-tasks');
+            tbody.innerHTML = '';
+            
+            const userTasks = activeTasksList.filter(t => (t.assigned_to || 'بدون مسئول') === username);
+            userTasks.forEach(t => {
+                let statusText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در جریان');
+                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50' : (statusText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50');
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="openTaskModal('${t.id}')">
+                        <td class="p-3 font-bold text-slate-700 text-xs truncate max-w-[150px]">${t.title}</td>
+                        <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-black ${sColor}">${statusText}</span></td>
+                        <td class="p-3 text-center text-xs font-black text-slate-500">${t.progress || 0}%</td>
+                        <td class="p-3 text-center text-xs font-black ${isOverdue(t.due_date) && statusText !== 'پایان یافته' ? 'text-rose-600' : 'text-slate-500'}" dir="ltr">${normalizeJalaliDate(t.due_date) || '-'}</td>
+                    </tr>
+                `;
+            });
+            section.classList.remove('hidden');
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderAnalytics() {
+            if (chartInstances['status']) chartInstances['status'].destroy();
+            if (chartInstances['workload']) chartInstances['workload'].destroy();
+
+            let sTodo=0, sIp=0, sDone=0;
+            activeTasksList.forEach(t => {
+                if(t.status === 'todo') sTodo++;
+                else if(t.status === 'done' || t.status === 'انجام شده') sDone++;
+                else sIp++;
+            });
+
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            chartInstances['status'] = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['برای انجام', 'در جریان', 'پایان یافته'],
+                    datasets: [{ data: [sTodo, sIp, sDone], backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } } } }
+            });
+
+            let users = {};
+            activeTasksList.forEach(t => {
+                let u = (t.assigned_to || 'آزاد').split(' ')[0];
+                users[u] = (users[u] || 0) + 1;
+            });
+            const uLabels = Object.keys(users); const uData = Object.values(users);
+
+            const ctxWorkload = document.getElementById('workloadChart').getContext('2d');
+            chartInstances['workload'] = new Chart(ctxWorkload, {
+                type: 'bar',
+                data: {
+                    labels: uLabels,
+                    datasets: [{ label: 'تعداد وظایف', data: uData, backgroundColor: '#0d9488', borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Vazirmatn' } } } } }
+            });
+        }
+
         // --- Modals & Data Modifiers ---
-        function openTaskModal(taskId = null) {
+        function openTaskModal(taskId = null, defaultDateStr = null) {
             const form = document.getElementById('taskForm');
             form.reset();
             document.getElementById('progressVal').innerText = '0%';
@@ -935,6 +1208,9 @@
                 document.getElementById('taskIdHidden').value = '';
                 document.getElementById('taskStatusHidden').value = 'todo';
                 document.getElementById('taskAssignee').value = getCurrentUserName();
+                if(defaultDateStr) {
+                    document.getElementById('taskDueDate').value = defaultDateStr;
+                }
             }
 
             document.getElementById('taskModal').classList.remove('hidden');
@@ -983,7 +1259,7 @@
             try {
                 if (id) {
                     if (isAdmin()) { taskData.is_approved = true; } 
-                    else if (assignee !== myName) { taskData.is_approved = false; }
+                    else if (assignee !== myName && taskData.creator_email === currentUser.email.toLowerCase()) { taskData.is_approved = false; }
                     
                     const { error } = await supaClient.from('tasks').update(taskData).eq('id', id);
                     if (error) throw error;
@@ -998,7 +1274,7 @@
                     showToast(successMessage, isApproved ? 'success' : 'info');
                 }
                 closeTaskModal(); 
-                await fetchTasks(true); // silent fetch trigger update
+                await fetchTasks(true);
             } catch (err) {
                 showToast('خطا در ارتباط با دیتابیس', 'error');
             } finally {
@@ -1158,51 +1434,6 @@
             document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
         });
 
-        // --- Sidebars and Tabs ---
-        function toggleSidebar() {
-            const sidebar = document.getElementById('mainSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar.classList.contains('translate-x-full')) {
-                sidebar.classList.remove('translate-x-full'); overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-            } else {
-                sidebar.classList.add('translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
-
-            ['kanban', 'taskcalendar', 'performance', 'calendar', 'archive', 'analytics', 'tracking'].forEach(id => {
-                const el = document.getElementById(`view-${id}`);
-                if(el) { el.classList.add('hidden'); el.classList.remove('block', 'flex'); }
-            });
-
-            const targetView = document.getElementById(`view-${tabId}`);
-            targetView.classList.remove('hidden');
-            if(tabId === 'kanban') targetView.classList.add('block'); else targetView.classList.add('flex');
-
-            const titles = { 'kanban': 'بورد مدیریت کارها', 'taskcalendar': 'تقویم سررسید وظایف', 'performance': 'گزارش عملکرد تیم', 'calendar': 'تقویم جلسات دوره‌ای', 'archive': 'پنل تاییدات مدیریت', 'analytics': 'داشبورد تحلیل داده‌ها', 'tracking': 'پیگیری ارجاعات من' };
-            document.getElementById('page-title').innerText = titles[tabId];
-
-            const headerActions = document.getElementById('header-actions');
-            const searchContainer = document.getElementById('search-container');
-            if(tabId === 'kanban' || tabId === 'taskcalendar' || tabId === 'tracking') {
-                headerActions.classList.remove('hidden'); searchContainer.classList.remove('hidden');
-            } else {
-                headerActions.classList.add('hidden'); searchContainer.classList.add('hidden');
-            }
-
-            if(window.innerWidth < 1024) toggleSidebar();
-            
-            if(tabId === 'kanban') renderKanban();
-            if(tabId === 'performance') generatePerformanceCards();
-            if(tabId === 'taskcalendar') renderTaskCalendar();
-            if(tabId === 'archive') renderArchive();
-            if(tabId === 'analytics') renderAnalytics();
-            if(tabId === 'tracking') renderTracking();
-        }
-
         // --- Meetings & Scheduling ---
         async function fetchMeetings() {
             if(!supaClient) return;
@@ -1241,17 +1472,6 @@
             });
         }
 
-        // Formatting Jalali logic for rendering month names
-        function formatJalaliDisplay(dateStr) {
-            if(!dateStr) return { day: '-', month: '-' };
-            let parts = dateStr.split('/');
-            if(parts.length !== 3) return { day: dateStr, month: '' };
-            let m = parseInt(parts[1], 10) - 1;
-            let d = parseInt(parts[2], 10);
-            let months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-            return { day: d, month: months[m] || '' };
-        }
-
         function renderMeetings() {
             const container = document.getElementById('meetings-list-container'); container.innerHTML = '';
             if(meetingsList.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 py-6 text-sm font-bold">جلسه‌ای یافت نشد.</div>'; return; }
@@ -1261,7 +1481,11 @@
                 if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار هفتگی</span>';
                 if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار ماهانه</span>';
 
-                let dateDisp = formatJalaliDisplay(m.meeting_date);
+                let dateDisp = { day: '-', month: '-' };
+                if(m.meeting_date) {
+                    let p = m.meeting_date.split('/');
+                    if(p.length===3) dateDisp = { day: parseInt(p[2]), month: monthNames[parseInt(p[1])-1]||'' };
+                }
 
                 container.innerHTML += `
                 <div class="flex items-stretch gap-4 group animate-fade-up">
@@ -1280,155 +1504,6 @@
                         </div>
                     </div>
                 </div>`;
-            });
-        }
-
-        // --- Task Calendar & Deadlines ---
-        function renderTaskCalendar() {
-            const upcomingList = document.getElementById('upcoming-tasks-list');
-            const overdueList = document.getElementById('overdue-tasks-list');
-            upcomingList.innerHTML = ''; overdueList.innerHTML = '';
-
-            let hasOverdue = false; let hasUpcoming = false;
-            
-            const tasksWithDate = activeTasksList.filter(t => t.due_date && t.status !== 'done' && t.status !== 'انجام شده');
-            tasksWithDate.sort((a, b) => normalizeJalaliDate(a.due_date).localeCompare(normalizeJalaliDate(b.due_date)));
-
-            tasksWithDate.forEach(t => {
-                let assignee = t.assigned_to || 'بدون مسئول';
-                let html = `
-                    <div class="flex flex-col bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-teal-400 transition cursor-pointer" onclick="openTaskModal('${t.id}')">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-black text-slate-800 text-sm truncate pr-2 border-r-2 border-teal-500">${t.title}</h4>
-                            <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${assignee.split(' ')[0]}</span>
-                        </div>
-                        <div class="text-xs font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar ml-1"></i> سررسید: <span dir="ltr">${normalizeJalaliDate(t.due_date)}</span></div>
-                    </div>
-                `;
-
-                if(isOverdue(t.due_date)) {
-                    hasOverdue = true;
-                    html = html.replace('border-teal-500', 'border-rose-500').replace('hover:border-teal-400', 'hover:border-rose-500').replace('text-slate-600', 'text-rose-600');
-                    overdueList.innerHTML += html;
-                } else {
-                    hasUpcoming = true;
-                    upcomingList.innerHTML += html;
-                }
-            });
-
-            if(!hasOverdue) overdueList.innerHTML = '<div class="text-sm font-bold text-slate-400 text-center py-4">هیچ کار معوقه‌ای ندارید. عالیست! 🎉</div>';
-            if(!hasUpcoming) upcomingList.innerHTML = '<div class="text-sm font-bold text-slate-400 text-center py-10"><i class="fa-solid fa-mug-hot text-4xl mb-3 block"></i> تقویم شما برای کارهای آینده خالی است.</div>';
-        }
-
-        // --- Performance & Analytics ---
-        function generatePerformanceCards() {
-            const container = document.getElementById('team-cards-container');
-            container.innerHTML = '';
-            
-            let users = {};
-            activeTasksList.forEach(t => {
-                let u = t.assigned_to || 'بدون مسئول';
-                if(!users[u]) users[u] = { total: 0, done: 0, ip: 0, overdue: 0, list: [] };
-                users[u].total++;
-                users[u].list.push(t);
-                if(t.status === 'done' || t.status === 'انجام شده') users[u].done++;
-                else {
-                    users[u].ip++;
-                    if(t.due_date && isOverdue(t.due_date)) users[u].overdue++;
-                }
-            });
-
-            if(Object.keys(users).length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold">اطلاعاتی یافت نشد.</div>`; return;
-            }
-
-            Object.keys(users).forEach(u => {
-                let d = users[u];
-                let score = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0;
-                score = Math.max(0, Math.round(score - (d.overdue * 3))); // penalty
-                
-                let color = score > 75 ? 'emerald' : (score > 40 ? 'amber' : 'rose');
-                let initials = getInitials(u);
-
-                container.innerHTML += `
-                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition cursor-pointer flex flex-col" onclick="showUserTasks('${u}')">
-                        <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
-                            <div class="w-12 h-12 rounded-2xl bg-${color}-100 text-${color}-700 flex items-center justify-center text-lg font-black">${initials}</div>
-                            <div>
-                                <h4 class="font-black text-slate-800">${u.split(' ')[0]}</h4>
-                                <p class="text-[10px] font-bold text-slate-500">راندمان عملکرد: <span class="text-${color}-600 text-sm">${score}%</span></p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
-                            <div class="bg-slate-50 p-2 rounded-xl text-slate-600"><div class="text-sm font-black">${d.total}</div>کل</div>
-                            <div class="bg-emerald-50 p-2 rounded-xl text-emerald-700"><div class="text-sm font-black">${d.done}</div>تکمیل</div>
-                            <div class="bg-rose-50 p-2 rounded-xl text-rose-700"><div class="text-sm font-black">${d.overdue}</div>تاخیر</div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function showUserTasks(username) {
-            const section = document.getElementById('member-detail-section');
-            document.getElementById('detail-member-name').innerText = `وظایف: ${username}`;
-            const tbody = document.getElementById('detail-member-tasks');
-            tbody.innerHTML = '';
-            
-            const userTasks = activeTasksList.filter(t => (t.assigned_to || 'بدون مسئول') === username);
-            userTasks.forEach(t => {
-                let statusText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در جریان');
-                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50' : (statusText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50');
-                
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 cursor-pointer" onclick="openTaskModal('${t.id}')">
-                        <td class="p-3 font-bold text-slate-700 text-xs truncate max-w-[150px]">${t.title}</td>
-                        <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-black ${sColor}">${statusText}</span></td>
-                        <td class="p-3 text-center text-xs font-black text-slate-500">${t.progress || 0}%</td>
-                        <td class="p-3 text-center text-xs font-black ${isOverdue(t.due_date) && statusText !== 'پایان یافته' ? 'text-rose-600' : 'text-slate-500'}" dir="ltr">${normalizeJalaliDate(t.due_date) || '-'}</td>
-                    </tr>
-                `;
-            });
-            section.classList.remove('hidden');
-            section.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function renderAnalytics() {
-            if (chartInstances['status']) chartInstances['status'].destroy();
-            if (chartInstances['workload']) chartInstances['workload'].destroy();
-
-            let sTodo=0, sIp=0, sDone=0;
-            activeTasksList.forEach(t => {
-                if(t.status === 'todo') sTodo++;
-                else if(t.status === 'done' || t.status === 'انجام شده') sDone++;
-                else sIp++;
-            });
-
-            const ctxStatus = document.getElementById('statusChart').getContext('2d');
-            chartInstances['status'] = new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: ['برای انجام', 'در جریان', 'پایان یافته'],
-                    datasets: [{ data: [sTodo, sIp, sDone], backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' } } } } }
-            });
-
-            let users = {};
-            activeTasksList.forEach(t => {
-                let u = (t.assigned_to || 'آزاد').split(' ')[0];
-                users[u] = (users[u] || 0) + 1;
-            });
-            const uLabels = Object.keys(users); const uData = Object.values(users);
-
-            const ctxWorkload = document.getElementById('workloadChart').getContext('2d');
-            chartInstances['workload'] = new Chart(ctxWorkload, {
-                type: 'bar',
-                data: {
-                    labels: uLabels,
-                    datasets: [{ label: 'تعداد وظایف', data: uData, backgroundColor: '#0d9488', borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Vazirmatn' } } } } }
             });
         }
     </script>
