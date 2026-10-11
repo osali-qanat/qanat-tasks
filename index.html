@@ -41,8 +41,9 @@
 
         .kanban-col { min-height: 50vh; transition: all 0.2s ease; border: 2px dashed transparent; }
         .kanban-col.drag-over { background-color: rgba(13, 148, 136, 0.05); border-color: #0d9488; border-radius: 0.75rem; }
-        .task-card { cursor: grab; transition: all 0.2s ease; border-left: 4px solid transparent; }
-        .task-card:active { cursor: grabbing; }
+        .task-card { transition: all 0.2s ease; border-left: 4px solid transparent; }
+        .task-card.draggable { cursor: grab; }
+        .task-card.draggable:active { cursor: grabbing; }
         .task-card.dragging { opacity: 0.5; transform: scale(0.95) rotate(2deg); z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
@@ -56,7 +57,6 @@
 
     <div id="toast-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-2 text-white"></div>
 
-    <!-- Custom Confirm Modal -->
     <div id="custom-confirm-modal" class="fixed inset-0 hidden items-center justify-center modal-overlay p-4 z-[250]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-up border border-slate-200 p-6 text-center">
             <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
@@ -107,7 +107,6 @@
 
     <div id="main-dashboard" class="flex-1 flex h-full w-full hidden">
         
-        <!-- Sidebar -->
         <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l border-teal-900">
             <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3 bg-teal-950/50">
                 <div class="flex items-center gap-3">
@@ -150,11 +149,11 @@
                 </button>
 
                 <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4" id="admin-menu-header">مدیریت سیستم</div>
-                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-amber-900/50 hover:text-white group">
+                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-amber-900/50 hover:text-white group relative">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-clipboard-list w-5 group-hover:text-amber-400"></i> پنل مدیریت (تاییدات)
                     </div>
-                    <span id="admin-badge" class="hidden bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm">0</span>
+                    <span id="admin-badge" class="hidden absolute left-4 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm">0</span>
                 </button>
             </nav>
             
@@ -172,7 +171,6 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="flex-1 flex flex-col h-full overflow-hidden w-full relative z-0 bg-slate-50">
             
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0 shadow-sm z-10 gap-4">
@@ -189,7 +187,7 @@
                 </div>
 
                 <div id="header-actions" class="flex-shrink-0 flex items-center gap-2">
-                    <button onclick="fetchTasks()" class="text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-2.5 rounded-xl transition shadow-sm" title="بروزرسانی داده‌ها">
+                    <button onclick="fetchTasks(false)" class="text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-2.5 rounded-xl transition shadow-sm" title="بروزرسانی داده‌ها">
                         <i class="fa-solid fa-rotate-right"></i>
                     </button>
                     <button onclick="openTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-teal-200 transition-all flex items-center gap-2">
@@ -200,7 +198,7 @@
 
             <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 relative">
                 
-                <!-- View 1: Kanban Board -->
+                <!-- View: Kanban -->
                 <div id="view-kanban" class="block h-full animate-fade-up">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -252,7 +250,7 @@
                     </div>
                 </div>
 
-                <!-- View 2: Task Calendar -->
+                <!-- View: Task Calendar -->
                 <div id="view-taskcalendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 flex flex-col gap-4">
@@ -272,7 +270,7 @@
                     </div>
                 </div>
                 
-                <!-- View 3: Tracking Referrals -->
+                <!-- View: Tracking -->
                 <div id="view-tracking" class="hidden h-full animate-fade-up flex-col gap-6">
                     <div class="bg-white rounded-3xl border border-indigo-200 shadow-sm flex-1 overflow-hidden flex flex-col">
                         <div class="p-5 border-b border-indigo-100 flex justify-between items-center bg-indigo-50/50">
@@ -298,7 +296,7 @@
                     </div>
                 </div>
 
-                <!-- View 4: Performance -->
+                <!-- View: Performance -->
                 <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="team-cards-container"></div>
                     
@@ -323,7 +321,7 @@
                     </div>
                 </div>
 
-                <!-- View 5: Meetings Calendar -->
+                <!-- View: Meetings Calendar -->
                 <div id="view-calendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 h-fit">
@@ -368,7 +366,7 @@
                     </div>
                 </div>
 
-                <!-- View 6: Analytics Dashboard -->
+                <!-- View: Analytics Dashboard -->
                 <div id="view-analytics" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
@@ -386,7 +384,7 @@
                     </div>
                 </div>
 
-                <!-- View 7: Admin / Archive / Approvals -->
+                <!-- View: Admin Archive / Approvals -->
                 <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-6">
                     <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
                         <div class="p-5 border-b border-amber-100 flex justify-between items-center bg-amber-50/50">
@@ -437,6 +435,7 @@
         </main>
     </div>
 
+    <!-- Task Modal Form -->
     <div id="taskModal" class="fixed inset-0 hidden flex items-center justify-center modal-overlay p-4 z-[100]">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-up border border-slate-200">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
@@ -530,6 +529,7 @@
         </div>
     </div>
 
+    <!-- Script Application Logic -->
     <script>
         // Init Jalali DatePicker
         jalaliDatepicker.startWatch({ minDate: "attr", maxDate: "attr", time: false, hideAfterChange: true, hasHiddenInput: true });
@@ -547,12 +547,12 @@
         let supaClient = null;
         let allTasksList = []; 
         let activeTasksList = []; 
-        let trackingTasksList = []; 
         let meetingsList = [];
         let currentUser = null;
         let chartInstances = {};
-        
         let confirmCallback = null;
+        let lastDataHash = '';
+        let pollingInterval = null;
 
         function isAdmin() { 
             return currentUser && MANAGERS_EMAILS.includes(currentUser.email.toLowerCase()); 
@@ -568,12 +568,45 @@
             return name.split(' ')[0].substring(0, 1).toUpperCase();
         }
 
+        // --- Date Normalization for Flawless Overdue Logic ---
+        // Ensuring all dates are formatted exactly as YYYY/MM/DD to allow string comparison
+        function normalizeJalaliDate(dateStr) {
+            if(!dateStr) return '';
+            let parts = dateStr.split('/');
+            if(parts.length !== 3) return dateStr;
+            let y = parts[0];
+            let m = parts[1].padStart(2, '0');
+            let d = parts[2].padStart(2, '0');
+            return `${y}/${m}/${d}`;
+        }
+
+        function getTodayJalali() {
+            const date = new Date();
+            const option = { calendar: 'persian', numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit' };
+            let formatter = new Intl.DateTimeFormat('fa-IR', option);
+            let parts = formatter.formatToParts(date);
+            let y = parts.find(p => p.type === 'year').value;
+            let m = parts.find(p => p.type === 'month').value.padStart(2, '0');
+            let d = parts.find(p => p.type === 'day').value.padStart(2, '0');
+            return `${y}/${m}/${d}`;
+        }
+
+        function isOverdue(dateString) {
+            if (!dateString) return false;
+            const today = getTodayJalali();
+            const normalizedTarget = normalizeJalaliDate(dateString);
+            return normalizedTarget < today; // Now '1403/08/05' < '1403/08/12' correctly computes!
+        }
+
+        // --- Core Supabase ---
         const setupSupabase = () => {
             try {
                 supaClient = window.supabase.createClient('https://fsbfdyipycoeykmhiaox.supabase.co', 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh');
+                
                 const btn = document.getElementById('login-btn');
                 btn.disabled = false; btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
                 btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
+                
                 document.getElementById('email').disabled = false; document.getElementById('password').disabled = false;
                 document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> ارتباط امن برقرار شد.</span>';
                 document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-emerald-500";
@@ -600,10 +633,10 @@
 
         async function handleLogin() {
             if(!supaClient) return;
+            // Standardize email input to fix case issues
             const email = document.getElementById('email').value.trim().toLowerCase(); 
             const password = document.getElementById('password').value;
             const btn = document.getElementById('login-btn'); 
-            const origClass = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
             
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال اعتبارسنجی...';
             btn.className = "w-full bg-slate-800 text-white font-black rounded-xl p-4 cursor-not-allowed text-sm flex items-center justify-center"; 
@@ -615,10 +648,12 @@
                 showToast('هویت تایید شد', 'success');
             } catch (err) {
                 showToast('ایمیل یا رمز اشتباه است یا کاربر وجود ندارد', 'error');
-            } finally {
-                btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>'; 
-                btn.className = origClass; 
-                btn.disabled = false;
+                // Reset form button on error
+                setTimeout(() => {
+                    btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
+                    btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
+                    btn.disabled = false;
+                }, 1000);
             }
         }
 
@@ -629,6 +664,8 @@
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('password').value = ''; currentUser = null;
             
+            if(pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+
             const btn = document.getElementById('login-btn');
             btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
             btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
@@ -652,24 +689,43 @@
             }
             
             switchTab('kanban'); 
-            fetchTasks(); 
+            fetchTasks(false); 
             fetchMeetings();
+
+            // Setup Smart Polling for "Realtime" feel without WebSocket errors
+            if(!pollingInterval) {
+                pollingInterval = setInterval(() => {
+                    if (currentUser && document.visibilityState === 'visible') {
+                        fetchTasks(true); // silent fetch
+                    }
+                }, 10000); // Update every 10 seconds silently
+            }
         }
 
-        async function fetchTasks() {
+        // --- Fetch & Filters ---
+        async function fetchTasks(isSilent = false) {
             if(!supaClient) return;
             try {
                 const { data, error } = await supaClient.from('tasks').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                allTasksList = data || [];
-                filterTasks(); 
-            } catch (err) { showToast('خطا در دریافت وظایف', 'error'); }
+                
+                const newHash = JSON.stringify(data);
+                if(newHash !== lastDataHash) {
+                    allTasksList = data || [];
+                    lastDataHash = newHash;
+                    filterTasks(); 
+                } else if(!isSilent) {
+                    // Force UI update if manual refresh button clicked
+                    filterTasks();
+                }
+            } catch (err) { 
+                if(!isSilent) showToast('خطا در دریافت وظایف', 'error'); 
+            }
         }
 
         function filterTasks() {
             const query = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
             
-            // Calculate admin badge notifications
             if (isAdmin()) {
                 const pendingApprovals = allTasksList.filter(t => (t.is_approved === false || t.is_approved === 'false') && t.is_archived !== true && t.is_archived !== 'true').length;
                 const pendingDeletions = allTasksList.filter(t => t.is_archived === true || t.is_archived === 'true').length;
@@ -690,7 +746,6 @@
             let visibleTasks = [];
 
             if (isAdmin()) {
-                // FIXED BUG: Managers ONLY see approved tasks on the Kanban board
                 visibleTasks = baseActive.filter(t => t.is_approved === true || t.is_approved === 'true'); 
             } else {
                 const myName = getCurrentUserName();
@@ -717,6 +772,7 @@
             if (isAdmin()) { renderArchive(); }
         }
 
+        // --- Render Functions ---
         function renderTracking() {
             const tbody = document.getElementById('tracking-table-body');
             if(!tbody || !currentUser) return;
@@ -790,8 +846,8 @@
                 let myName = getCurrentUserName();
                 let isReadOnly = !isAdmin() && (task.assigned_to !== myName || isPending); 
                 
-                let pendingBadge = isPending ? `<div class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-300 flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر برای ارجاع</div>` : '';
-                let dragClass = isReadOnly ? 'cursor-not-allowed opacity-80' : 'cursor-grab';
+                let pendingBadge = isPending ? `<div class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-300 flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر</div>` : '';
+                let dragClass = isReadOnly ? '' : 'draggable';
                 let draggable = !isReadOnly;
 
                 let actionButtonsHTML = !isReadOnly ? `
@@ -806,7 +862,7 @@
                 `;
 
                 const cardHTML = `
-                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggable}" ondragstart="drag(event)">
+                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggable}" ondragstart="${draggable ? 'drag(event)' : ''}">
                         ${pendingBadge}
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[9px] font-black px-2 py-0.5 rounded-md border ${pConfig.bg} flex items-center gap-1"><i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}</span>
@@ -825,7 +881,7 @@
                                 <div class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black ${assigneeColor}">${getInitials(assigneeStr)}</div>
                                 <span class="text-[10px] font-bold text-slate-600 truncate max-w-[70px]">${assigneeStr.split(' ')[0]}</span>
                             </div>
-                            ${task.due_date ? `<div class="text-[9px] font-black ${overdueClass ? 'text-rose-700' : 'text-slate-500'} flex items-center gap-1"><i class="fa-regular fa-calendar ${dueIconColor}"></i> ${task.due_date.substring(5)}</div>` : ''}
+                            ${task.due_date ? `<div class="text-[9px] font-black ${overdueClass ? 'text-rose-700' : 'text-slate-500'} flex items-center gap-1"><i class="fa-regular fa-calendar ${dueIconColor}"></i> ${normalizeJalaliDate(task.due_date)}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -838,10 +894,12 @@
             document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
         }
 
+        // --- Modals & Data Modifiers ---
         function openTaskModal(taskId = null) {
             const form = document.getElementById('taskForm');
             form.reset();
             document.getElementById('progressVal').innerText = '0%';
+            document.getElementById('taskProgress').value = 0;
             
             const submitBtn = document.getElementById('btn-submit-task');
             if (submitBtn) submitBtn.style.display = 'flex';
@@ -867,7 +925,7 @@
                     document.getElementById('taskCategory').value = task.category || 'مالی و حسابداری';
                     document.getElementById('taskPriority').value = task.priority || 'عادی';
                     document.getElementById('taskAssignee').value = task.assigned_to || 'تخصیص نیافته';
-                    document.getElementById('taskDueDate').value = task.due_date || '';
+                    document.getElementById('taskDueDate').value = normalizeJalaliDate(task.due_date) || '';
                     document.getElementById('taskProgress').value = task.progress || 0;
                     document.getElementById('progressVal').innerText = (task.progress || 0) + '%';
                 }
@@ -892,7 +950,7 @@
             const btn = document.getElementById('btn-submit-task');
             if(!btn) return;
             
-            const originalText = document.getElementById('btn-submit-text') ? document.getElementById('btn-submit-text').innerText : 'ثبت وظیفه';
+            const originalText = document.getElementById('btn-submit-text').innerText;
             const id = document.getElementById('taskIdHidden').value;
             const assignee = document.getElementById('taskAssignee').value;
             const myName = getCurrentUserName();
@@ -914,7 +972,7 @@
                 category: document.getElementById('taskCategory').value,
                 priority: document.getElementById('taskPriority').value,
                 assigned_to: assignee,
-                due_date: document.getElementById('taskDueDate').value || null,
+                due_date: normalizeJalaliDate(document.getElementById('taskDueDate').value) || null,
                 progress: parseInt(document.getElementById('taskProgress').value),
                 creator_email: currentUser.email.toLowerCase()
             };
@@ -940,7 +998,7 @@
                     showToast(successMessage, isApproved ? 'success' : 'info');
                 }
                 closeTaskModal(); 
-                await fetchTasks();
+                await fetchTasks(true); // silent fetch trigger update
             } catch (err) {
                 showToast('خطا در ارتباط با دیتابیس', 'error');
             } finally {
@@ -949,6 +1007,7 @@
             }
         }
 
+        // --- Custom Confirm Component ---
         function showConfirm(title, message, callback) {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
@@ -968,13 +1027,14 @@
             closeConfirm();
         }
 
+        // --- Archives & Admin ---
         function softDeleteTask(id) {
             const msg = isAdmin() ? 'آیا از انتقال این وظیفه به سطل زباله مطمئن هستید؟' : 'آیا می‌خواهید درخواست حذف این وظیفه را به مدیر ارسال کنید؟';
             showConfirm('حذف وظیفه', msg, async () => {
                 try {
                     await supaClient.from('tasks').update({ is_archived: true }).eq('id', id);
                     showToast(isAdmin() ? 'به بایگانی منتقل شد' : 'درخواست حذف برای مدیر ارسال شد', 'info');
-                    await fetchTasks();
+                    await fetchTasks(true);
                 } catch (err) { showToast('خطا در انتقال', 'error'); }
             });
         }
@@ -1031,14 +1091,14 @@
             try {
                 await supaClient.from('tasks').update({ is_approved: true }).eq('id', id);
                 showToast('وظیفه تایید شد و در بورد قرار گرفت', 'success'); 
-                await fetchTasks();
+                await fetchTasks(true);
             } catch(e) { showToast('خطا در تایید وظیفه', 'error'); }
         }
 
         async function restoreTask(id) {
             try {
                 await supaClient.from('tasks').update({ is_archived: false }).eq('id', id);
-                showToast('به بورد اصلی بازگشت', 'success'); await fetchTasks();
+                showToast('به بورد اصلی بازگشت', 'success'); await fetchTasks(true);
             } catch(e) { showToast('خطا در بازگردانی', 'error'); }
         }
 
@@ -1047,11 +1107,12 @@
                 try {
                     await supaClient.from('tasks').delete().eq('id', id);
                     showToast('حذف دائم با موفقیت انجام شد', 'info'); 
-                    await fetchTasks();
+                    await fetchTasks(true);
                 } catch(e) { showToast('خطا در حذف از سرور', 'error'); }
             });
         }
 
+        // --- Drag and Drop Logic ---
         let draggedTaskId = null;
         function drag(ev) {
             const taskId = ev.target.closest('.task-card').id;
@@ -1079,6 +1140,13 @@
             const taskObj = allTasksList.find(t => t.id === taskId);
             
             if(taskObj && taskObj.status !== newStatus) {
+                let myName = getCurrentUserName();
+                let isReadOnly = !isAdmin() && taskObj && (taskObj.assigned_to !== myName || taskObj.is_approved === false || taskObj.is_approved === 'false');
+                if (isReadOnly) {
+                    showToast('شما اجازه تغییر وضعیت این کار را ندارید.', 'error');
+                    return;
+                }
+
                 let oldStatus = taskObj.status; taskObj.status = newStatus;
                 filterTasks(); 
                 try { await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId); } 
@@ -1090,6 +1158,7 @@
             document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
         });
 
+        // --- Sidebars and Tabs ---
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -1134,23 +1203,7 @@
             if(tabId === 'tracking') renderTracking();
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast-message');
-            let icon = '<i class="fa-solid fa-circle-info"></i>';
-            toast.className = 'fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
-            if(type === 'error') { toast.className += 'bg-rose-600 border-2 border-rose-800'; icon = '<i class="fa-solid fa-triangle-exclamation"></i>'; } 
-            else if (type === 'success') { toast.className += 'bg-emerald-600 border-2 border-emerald-800'; icon = '<i class="fa-solid fa-circle-check"></i>'; } 
-            else { toast.className += 'bg-teal-800 border-2 border-teal-950'; }
-            toast.innerHTML = icon + ' ' + message;
-            setTimeout(() => { toast.classList.replace('opacity-100', 'opacity-0'); toast.classList.replace('translate-y-0', 'translate-y-[-2rem]'); }, 4000);
-        }
-
-        function isOverdue(dateString) {
-            if (!dateString) return false;
-            const today = new Date().toLocaleDateString('fa-IR', { numberingSystem: 'latn' });
-            return dateString < today;
-        }
-
+        // --- Meetings & Scheduling ---
         async function fetchMeetings() {
             if(!supaClient) return;
             try {
@@ -1162,7 +1215,7 @@
         async function submitMeeting() {
             const newM = {
                 title: document.getElementById('meetingTitle').value,
-                meeting_date: document.getElementById('meetingDate').value,
+                meeting_date: normalizeJalaliDate(document.getElementById('meetingDate').value),
                 meeting_time: document.getElementById('meetingTime').value,
                 location: document.getElementById('meetingLocation').value,
                 recurring_type: document.getElementById('meetingRecurring').value
@@ -1179,16 +1232,24 @@
 
         function deleteMeeting(id) {
             if(!isAdmin()) return showToast('دسترسی لغو جلسه ندارید', 'error');
-            
             showConfirm('لغو جلسه', 'آیا از لغو و حذف این جلسه مطمئن هستید؟', async () => {
                 try {
                     await supaClient.from('meetings').delete().eq('id', id); 
                     await fetchMeetings();
                     showToast('جلسه با موفقیت لغو شد', 'info');
-                } catch(e) {
-                    showToast('خطا در حذف جلسه', 'error');
-                }
+                } catch(e) { showToast('خطا در حذف جلسه', 'error'); }
             });
+        }
+
+        // Formatting Jalali logic for rendering month names
+        function formatJalaliDisplay(dateStr) {
+            if(!dateStr) return { day: '-', month: '-' };
+            let parts = dateStr.split('/');
+            if(parts.length !== 3) return { day: dateStr, month: '' };
+            let m = parseInt(parts[1], 10) - 1;
+            let d = parseInt(parts[2], 10);
+            let months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            return { day: d, month: months[m] || '' };
         }
 
         function renderMeetings() {
@@ -1200,11 +1261,13 @@
                 if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار هفتگی</span>';
                 if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار ماهانه</span>';
 
+                let dateDisp = formatJalaliDisplay(m.meeting_date);
+
                 container.innerHTML += `
                 <div class="flex items-stretch gap-4 group animate-fade-up">
                     <div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
-                        <span class="text-[10px] font-bold">شمسی</span>
-                        <span class="text-sm font-black mt-1" dir="ltr">${m.meeting_date.substring(5)}</span>
+                        <span class="text-[10px] font-bold">${dateDisp.month}</span>
+                        <span class="text-sm font-black mt-1" dir="ltr">${dateDisp.day}</span>
                     </div>
                     <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 group-hover:border-teal-300 transition shadow-sm relative">
                         <div class="flex justify-between items-start mb-2">
@@ -1220,6 +1283,7 @@
             });
         }
 
+        // --- Task Calendar & Deadlines ---
         function renderTaskCalendar() {
             const upcomingList = document.getElementById('upcoming-tasks-list');
             const overdueList = document.getElementById('overdue-tasks-list');
@@ -1228,7 +1292,7 @@
             let hasOverdue = false; let hasUpcoming = false;
             
             const tasksWithDate = activeTasksList.filter(t => t.due_date && t.status !== 'done' && t.status !== 'انجام شده');
-            tasksWithDate.sort((a, b) => a.due_date.localeCompare(b.due_date));
+            tasksWithDate.sort((a, b) => normalizeJalaliDate(a.due_date).localeCompare(normalizeJalaliDate(b.due_date)));
 
             tasksWithDate.forEach(t => {
                 let assignee = t.assigned_to || 'بدون مسئول';
@@ -1238,7 +1302,7 @@
                             <h4 class="font-black text-slate-800 text-sm truncate pr-2 border-r-2 border-teal-500">${t.title}</h4>
                             <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${assignee.split(' ')[0]}</span>
                         </div>
-                        <div class="text-xs font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar ml-1"></i> سررسید: <span dir="ltr">${t.due_date}</span></div>
+                        <div class="text-xs font-bold text-slate-600 mt-1"><i class="fa-regular fa-calendar ml-1"></i> سررسید: <span dir="ltr">${normalizeJalaliDate(t.due_date)}</span></div>
                     </div>
                 `;
 
@@ -1256,6 +1320,7 @@
             if(!hasUpcoming) upcomingList.innerHTML = '<div class="text-sm font-bold text-slate-400 text-center py-10"><i class="fa-solid fa-mug-hot text-4xl mb-3 block"></i> تقویم شما برای کارهای آینده خالی است.</div>';
         }
 
+        // --- Performance & Analytics ---
         function generatePerformanceCards() {
             const container = document.getElementById('team-cards-container');
             container.innerHTML = '';
@@ -1320,7 +1385,7 @@
                         <td class="p-3 font-bold text-slate-700 text-xs truncate max-w-[150px]">${t.title}</td>
                         <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-black ${sColor}">${statusText}</span></td>
                         <td class="p-3 text-center text-xs font-black text-slate-500">${t.progress || 0}%</td>
-                        <td class="p-3 text-center text-xs font-black ${isOverdue(t.due_date) && statusText !== 'پایان یافته' ? 'text-rose-600' : 'text-slate-500'}" dir="ltr">${t.due_date || '-'}</td>
+                        <td class="p-3 text-center text-xs font-black ${isOverdue(t.due_date) && statusText !== 'پایان یافته' ? 'text-rose-600' : 'text-slate-500'}" dir="ltr">${normalizeJalaliDate(t.due_date) || '-'}</td>
                     </tr>
                 `;
             });
