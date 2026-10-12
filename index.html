@@ -2,8 +2,8 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سیستم جامع مدیریت پروژه‌ها | صندوق قنات</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>پرتال سازمانی | صندوق قنات</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,334 +21,311 @@
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Mobile Drag and Drop Polyfill (Crucial for Touch Devices) -->
+    <!-- Mobile Drag and Drop Polyfill -->
     <script src="https://unpkg.com/drag-drop-touch"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;700;900&display=swap');
-        body { font-family: 'Vazirmatn', Tahoma, sans-serif; background-color: #f1f5f9; color: #1e293b; overflow: hidden; }
         
-        /* Custom Scrollbars for better Mobile/Desktop UX */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        :root {
+            --primary: #0d9488; /* Teal 600 */
+            --primary-dark: #0f766e;
+            --bg-body: #f8fafc;
+        }
 
-        .kanban-scroll::-webkit-scrollbar { height: 8px; }
-        .kanban-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); border-radius: 10px; }
-        .kanban-scroll::-webkit-scrollbar-thumb { background: rgba(13, 148, 136, 0.25); border-radius: 10px; }
-        .kanban-scroll::-webkit-scrollbar-thumb:hover { background: rgba(13, 148, 136, 0.5); }
+        body { 
+            font-family: 'Vazirmatn', Tahoma, sans-serif; 
+            background-color: var(--bg-body); 
+            color: #1e293b; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        .sidebar-item { transition: all 0.2s ease; }
-        .sidebar-item.active { background-color: #0f766e; color: white; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3); font-weight: 900; border-right: 4px solid #5eead4; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 100; }
+        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        .kanban-col { min-height: 50vh; transition: all 0.2s ease; border: 2px dashed transparent; }
-        .kanban-col.drag-over { background-color: rgba(13, 148, 136, 0.05); border-color: #0d9488; border-radius: 0.75rem; }
-        .task-card { transition: all 0.2s ease; border-left: 4px solid transparent; }
-        .task-card.draggable { cursor: grab; touch-action: none; } /* touch-action prevents scroll when dragging */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(6px); z-index: 1000; }
+
+        /* Sidebar Item */
+        .sidebar-item { transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .sidebar-item.active { background-color: rgba(255, 255, 255, 0.1); color: #fff; font-weight: 900; }
+        .sidebar-item.active::before { content: ''; position: absolute; right: 0; top: 0; height: 100%; width: 4px; background-color: #5eead4; border-radius: 4px 0 0 4px; }
+
+        /* Bottom Nav Item (Mobile) */
+        .bottom-nav-item { transition: all 0.2s ease; }
+        .bottom-nav-item.active { color: var(--primary); transform: translateY(-3px); }
+        .bottom-nav-item.active .nav-icon-bg { background-color: #f0fdfa; border-radius: 12px; padding: 6px 16px; }
+
+        /* Kanban Physics */
+        .kanban-col { min-height: 200px; transition: all 0.2s ease; }
+        .kanban-col.drag-over { background-color: #f0fdfa; border: 2px dashed #0d9488; border-radius: 1rem; }
+        .task-card { transition: transform 0.2s, box-shadow 0.2s; border-right: 4px solid transparent; }
+        .task-card.draggable { cursor: grab; touch-action: pan-y; } 
         .task-card.draggable:active { cursor: grabbing; }
-        .task-card.dragging { opacity: 0.5; transform: scale(0.95) rotate(2deg); z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .task-card.dragging { opacity: 0.6; transform: scale(0.96) rotate(1deg); z-index: 50; box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-right-color: var(--primary); }
         
+        /* Mobile Kanban Tab Switcher */
+        .k-tab { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .k-tab.active { background-color: #fff; color: var(--primary-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-weight: 900; }
+
+        /* Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #0d9488; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(13,148,136,0.4); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--primary); cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(13,148,136,0.3); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #e2e8f0; border-radius: 10px; }
         
-        jdp-container { z-index: 9999 !important; font-family: 'Vazirmatn', sans-serif !important; }
+        jdp-container { z-index: 9999 !important; font-family: 'Vazirmatn', sans-serif !important; border-radius: 1.5rem !important; border: none !important; box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; }
 
-        /* Calendar specific styles */
-        .cal-cell { transition: all 0.2s; min-height: 100px; }
-        .cal-cell:hover { background-color: #f8fafc; border-color: #0d9488; cursor: pointer; }
-        .cal-cell.today { background-color: #f0fdfa; border-color: #14b8a6; border-width: 2px; }
+        /* Calendar specific */
+        .cal-cell { transition: all 0.2s; min-height: 110px; }
+        .cal-cell:hover { background-color: #f8fafc; cursor: pointer; }
+        .cal-cell.today { background-color: #f0fdfa; border: 2px solid #14b8a6; }
     </style>
 </head>
-<body class="flex h-[100dvh] w-full relative selection:bg-teal-200 selection:text-teal-900">
+<body class="flex h-[100dvh] w-full relative selection:bg-teal-200 selection:text-teal-900 bg-slate-50">
 
-    <div id="toast-message" class="fixed top-5 w-[90vw] max-w-sm left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-2 text-white"></div>
+    <div id="toast-message" class="fixed top-6 w-[90vw] max-w-sm left-1/2 transform -translate-x-1/2 px-5 py-4 rounded-2xl shadow-2xl z-[2000] text-sm font-black transition-all duration-400 opacity-0 translate-y-[-2rem] pointer-events-none flex items-center gap-3 text-white border border-white/20 glass-panel"></div>
 
-    <div id="custom-confirm-modal" class="fixed inset-0 hidden items-center justify-center modal-overlay p-4 z-[250]">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-fade-up border border-slate-200 p-6 text-center">
-            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+    <div id="custom-confirm-modal" class="fixed inset-0 hidden items-center justify-center modal-overlay p-4 z-[1500]">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm flex flex-col overflow-hidden animate-pop-in border border-slate-100 p-8 text-center">
+            <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-5 shadow-inner">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <h3 class="text-lg font-black text-slate-800 mb-2" id="confirm-title">تایید عملیات</h3>
-            <p class="text-sm text-slate-500 font-bold mb-6" id="confirm-message">آیا از انجام این عملیات مطمئن هستید؟</p>
-            <div class="flex flex-col sm:flex-row gap-3 w-full">
-                <button onclick="closeConfirm()" class="flex-1 px-4 py-3 rounded-xl font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition text-sm order-2 sm:order-1">انصراف</button>
-                <button onclick="executeConfirm()" class="flex-1 px-4 py-3 rounded-xl font-black text-white bg-rose-600 hover:bg-rose-700 transition text-sm shadow-lg shadow-rose-200 order-1 sm:order-2">بله، تایید</button>
+            <h3 class="text-xl font-black text-slate-800 mb-3" id="confirm-title">تایید عملیات</h3>
+            <p class="text-sm text-slate-500 font-bold mb-8 leading-relaxed" id="confirm-message">آیا از انجام این عملیات مطمئن هستید؟</p>
+            <div class="flex flex-col gap-3 w-full">
+                <button onclick="executeConfirm()" class="w-full px-5 py-4 rounded-xl font-black text-white bg-rose-600 hover:bg-rose-700 transition text-sm shadow-lg shadow-rose-200">بله، تایید میکنم</button>
+                <button onclick="closeConfirm()" class="w-full px-5 py-4 rounded-xl font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition text-sm">انصراف و بازگشت</button>
             </div>
         </div>
     </div>
 
-    <!-- فرم لاگین -->
-    <div id="auth-screen" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
-        <div class="max-w-md w-full glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200 relative overflow-hidden animate-fade-up">
+    <div id="auth-screen" class="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-100 z-[1000] flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+        <div class="max-w-md w-full bg-white/90 backdrop-blur-xl p-8 sm:p-10 rounded-[2.5rem] shadow-2xl border border-white relative overflow-hidden animate-slide-up">
             <div id="connection-status" class="absolute top-0 left-0 w-full h-1.5 bg-amber-400 animate-pulse"></div>
-            <div class="text-center mb-8 mt-2">
-                <div class="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-teal-200 transform rotate-3">
-                    <i class="fa-solid fa-users-gear text-3xl text-white -rotate-3"></i>
+            <div class="text-center mb-10 mt-2">
+                <div class="w-20 h-20 bg-gradient-to-br from-teal-500 to-teal-800 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-teal-200/50 transform rotate-3 transition hover:rotate-0">
+                    <i class="fa-solid fa-gem text-4xl text-white"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">پرتال سازمانی تیم قنات</h2>
-                <p class="text-slate-500 text-xs mt-2 font-bold" id="login-subtitle">در حال اعتبارسنجی هسته مرکزی...</p>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">پرتال قنات</h2>
+                <p class="text-slate-500 text-xs mt-3 font-bold px-4" id="login-subtitle">به سیستم یکپارچه مدیریت منابع سازمانی خوش آمدید</p>
             </div>
             <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-black text-slate-700 mb-1.5">شناسه کاربری (ایمیل سازمانی)</label>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                        <input type="email" id="email" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="example@qanat.ir" required disabled>
+                        <i class="fa-solid fa-at absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="email" id="email" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pr-12 pl-4 text-left focus:border-teal-500 focus:bg-white outline-none transition-all font-bold text-slate-700" dir="ltr" placeholder="Email Address" required disabled>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-black text-slate-700 mb-1.5">رمز عبور امنیتی</label>
                     <div class="relative">
                         <i class="fa-solid fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                        <input type="password" id="password" class="w-full border-2 border-slate-200 rounded-xl py-3.5 pr-11 pl-4 text-left focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none transition-all font-bold bg-slate-50 focus:bg-white" dir="ltr" placeholder="••••••••" required disabled>
+                        <input type="password" id="password" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pr-12 pl-4 text-left focus:border-teal-500 focus:bg-white outline-none transition-all font-bold text-slate-700" dir="ltr" placeholder="Password" required disabled>
                     </div>
                 </div>
-                <button type="submit" id="login-btn" class="w-full bg-slate-200 text-slate-400 font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center gap-2" disabled>
-                    <i class="fa-solid fa-circle-notch fa-spin text-lg"></i> برقراری ارتباط...
+                <button type="submit" id="login-btn" class="w-full bg-slate-200 text-slate-400 font-black rounded-2xl p-4 transition-all duration-300 flex items-center justify-center gap-2 mt-4" disabled>
+                    <i class="fa-solid fa-circle-notch fa-spin text-lg"></i> اتصال به هسته...
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- پس‌زمینه محو برای موبایل -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
-
-    <div id="main-dashboard" class="flex-1 flex h-full w-full hidden">
+    <div id="main-dashboard" class="flex-1 flex h-[100dvh] w-full hidden">
         
-        <!-- سایدبار -->
-        <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-teal-950 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l border-teal-900">
-            <div class="p-6 border-b border-teal-900 flex items-center justify-between gap-3 bg-teal-950/50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-900">
-                        <i class="fa-solid fa-layer-group text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-white font-black text-base leading-tight">تیم پروژه</h2>
-                        <p class="text-[10px] text-teal-300 font-bold tracking-wider uppercase mt-0.5">صندوق قنات</p>
-                    </div>
+        <!-- Desktop Sidebar -->
+        <aside id="mainSidebar" class="hidden lg:flex flex-col w-72 bg-slate-900 text-slate-300 shadow-2xl relative z-20">
+            <div class="p-8 border-b border-slate-800 flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-teal-900/50">
+                    <i class="fa-solid fa-gem text-2xl"></i>
                 </div>
-                <button onclick="toggleSidebar()" class="lg:hidden text-teal-500 hover:text-white transition p-1">
-                    <i class="fa-solid fa-xmark text-2xl"></i>
-                </button>
+                <div>
+                    <h2 class="text-white font-black text-lg leading-tight">صندوق قنات</h2>
+                    <p class="text-xs text-teal-400 font-bold tracking-wider mt-1">Enterprise Portal</p>
+                </div>
             </div>
 
-            <nav class="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
-                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-2 px-4">مدیریت عملیات</div>
-                <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-kanban w-5"></i> بورد کارهای جاری
+            <nav class="flex-1 p-5 space-y-2 overflow-y-auto custom-scrollbar">
+                <div class="text-[10px] font-black text-slate-500 mb-3 mt-2 px-2 uppercase tracking-wider">عملیات جاری</div>
+                <button onclick="switchTab('kanban')" id="tab-btn-kanban" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-layer-group w-6 text-center"></i> بورد وظایف (Kanban)
                 </button>
-                <button onclick="switchTab('taskcalendar')" id="tab-btn-taskcalendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-regular fa-calendar-check w-5"></i> تقویم سررسید وظایف
+                <button onclick="switchTab('taskcalendar')" id="tab-btn-taskcalendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-calendar-day w-6 text-center"></i> تقویم وظایف
                 </button>
                 
-                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4">پیگیری و وضعیت</div>
-                <button onclick="switchTab('tracking')" id="tab-btn-tracking" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-route w-5"></i> پیگیری ارجاعات من
+                <div class="text-[10px] font-black text-slate-500 mb-3 mt-8 px-2 uppercase tracking-wider">گزارشات و پیگیری</div>
+                <button onclick="switchTab('tracking')" id="tab-btn-tracking" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-paper-plane w-6 text-center"></i> پیگیری ارجاعات
                 </button>
-                <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-handshake w-5"></i> تقویم جلسات دوره‌ای
+                <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-users-viewfinder w-6 text-center"></i> تقویم جلسات
                 </button>
-
-                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4">تحلیل و گزارشات</div>
-                <button onclick="switchTab('performance')" id="tab-btn-performance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-people-group w-5"></i> عملکرد و راندمان تیم
+                <button onclick="switchTab('performance')" id="tab-btn-performance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-chart-pie w-6 text-center"></i> عملکرد اعضا
                 </button>
-                <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-teal-900 hover:text-white">
-                    <i class="fa-solid fa-chart-pie w-5"></i> داشبورد تحلیل داده‌ها
+                <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="sidebar-item w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-chart-line w-6 text-center"></i> داشبورد تحلیل
                 </button>
 
-                <div class="text-[10px] font-black text-teal-600/70 mb-2 mt-6 px-4" id="admin-menu-header">مدیریت سیستم</div>
-                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-amber-900/50 hover:text-white group relative">
+                <div class="text-[10px] font-black text-rose-400 mb-3 mt-8 px-2 uppercase tracking-wider" id="admin-menu-header">دسترسی مدیریت</div>
+                <button onclick="switchTab('archive')" id="tab-btn-archive" class="sidebar-item w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-slate-800">
                     <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-clipboard-list w-5 group-hover:text-amber-400"></i> پنل مدیریت (تاییدات)
+                        <i class="fa-solid fa-shield-halved w-6 text-center text-amber-400"></i> کارتابل تاییدات
                     </div>
-                    <span id="admin-badge" class="hidden absolute left-4 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm">0</span>
+                    <span id="admin-badge" class="hidden bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm">0</span>
                 </button>
             </nav>
             
-            <div class="p-4 border-t border-teal-900 bg-teal-950/80">
-                <div class="bg-teal-900/40 rounded-xl p-3 flex items-center gap-3 border border-teal-800/50">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center text-white font-black shadow-inner" id="user-avatar-initial">ق</div>
+            <div class="p-6 border-t border-slate-800 bg-slate-900/50">
+                <div class="bg-slate-800 rounded-2xl p-3 flex items-center gap-3 border border-slate-700">
+                    <div class="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center text-white font-black shadow-inner" id="user-avatar-initial">ق</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] font-black text-white truncate" id="user-display-name">...</p>
-                        <p class="text-[9px] text-teal-400 font-bold uppercase tracking-widest mt-0.5" id="user-role-display">عضو سیستم</p>
+                        <p class="text-xs font-black text-white truncate" id="user-display-name">...</p>
+                        <p class="text-[9px] text-teal-400 font-bold mt-1" id="user-role-display">عضو سیستم</p>
                     </div>
-                    <button onclick="handleLogout()" class="text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition" title="خروج از سیستم">
-                        <i class="fa-solid fa-power-off text-lg"></i>
+                    <button onclick="handleLogout()" class="text-slate-400 hover:text-rose-400 p-2 rounded-lg transition" title="خروج">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-lg"></i>
                     </button>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col h-full overflow-hidden w-full relative z-0 bg-slate-50">
+        <main class="flex-1 flex flex-col h-[100dvh] w-full relative z-0">
             
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 md:px-6 flex-shrink-0 shadow-sm z-10 gap-2 sm:gap-4">
-                <div class="flex items-center gap-3 flex-shrink-0">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-teal-600 focus:outline-none p-1.5 sm:p-2 rounded-lg bg-slate-100 transition">
-                        <i class="fa-solid fa-bars text-lg sm:text-xl"></i>
-                    </button>
-                    <h1 id="page-title" class="hidden md:block text-base md:text-lg font-black text-slate-800">بورد مدیریت کارهای جاری</h1>
+            <!-- Mobile Header -->
+            <header class="lg:hidden h-20 bg-white border-b border-slate-100 flex items-center justify-between px-5 flex-shrink-0 z-10 pt-safe">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-gem text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-black text-slate-800" id="page-title-mobile">بورد وظایف</h1>
+                        <p class="text-[10px] text-slate-500 font-bold" id="user-name-mobile">کاربر</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="fetchTasks(false)" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-slate-100 transition"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button onclick="handleLogout()" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 transition"><i class="fa-solid fa-power-off"></i></button>
+                </div>
+            </header>
+
+            <!-- Desktop Header -->
+            <header class="hidden lg:flex h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 items-center justify-between px-8 flex-shrink-0 z-10">
+                <div>
+                    <h1 id="page-title-desktop" class="text-2xl font-black text-slate-800">بورد مدیریت کارهای جاری</h1>
+                    <p class="text-xs text-slate-500 font-bold mt-1">نمای کلی پروژه‌ها و وظایف تیم</p>
                 </div>
                 
-                <div id="search-container" class="flex-1 min-w-[140px] max-w-md relative transition-all">
-                    <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="searchInput" onkeyup="filterTasks()" placeholder="جستجو وظایف..." class="w-full bg-slate-100 border border-transparent focus:bg-white focus:border-teal-500 rounded-xl py-2 sm:py-2.5 pr-9 pl-4 outline-none text-xs font-bold text-slate-700 transition">
-                </div>
-
-                <div id="header-actions" class="flex-shrink-0 flex items-center gap-1.5 sm:gap-2">
-                    <button onclick="fetchTasks(false)" class="text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-2 sm:p-2.5 rounded-xl transition shadow-sm" title="بروزرسانی داده‌ها">
-                        <i class="fa-solid fa-rotate-right"></i>
+                <div class="flex items-center gap-6">
+                    <div class="relative w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" onkeyup="filterTasks()" placeholder="جستجو در وظایف..." class="w-full bg-slate-50 border-2 border-slate-100 focus:bg-white focus:border-teal-500 rounded-2xl py-3 pr-12 pl-4 outline-none text-sm font-bold text-slate-700 transition">
+                    </div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <button onclick="fetchTasks(false)" class="text-slate-500 hover:text-teal-600 bg-slate-50 p-3 rounded-xl transition border border-slate-100" title="بروزرسانی">
+                        <i class="fa-solid fa-rotate-right text-lg"></i>
                     </button>
-                    <button onclick="openTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-teal-200 transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">ثبت وظیفه</span>
+                    <button onclick="openTaskModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl text-sm font-black shadow-lg shadow-teal-200 transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> ثبت وظیفه جدید
                     </button>
                 </div>
             </header>
 
-            <div class="flex-1 overflow-auto custom-scrollbar p-3 md:p-6 lg:p-8 relative">
+            <!-- Content Container -->
+            <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-28 lg:pb-8 relative custom-scrollbar">
                 
-                <!-- تب بورد کانبان -->
                 <div id="view-kanban" class="block h-full animate-fade-up">
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-1 h-full bg-slate-400"></div>
-                            <p class="text-[9px] sm:text-[10px] font-black text-slate-500 mb-1 uppercase tracking-wider">مجموع وظایف قابل دید</p>
-                            <h3 class="text-xl sm:text-2xl font-black text-slate-800" id="stat-total">0</h3>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-1 h-full bg-sky-500"></div>
-                            <p class="text-[9px] sm:text-[10px] font-black text-sky-600 mb-1 uppercase tracking-wider">برای انجام</p>
-                            <h3 class="text-xl sm:text-2xl font-black text-sky-900" id="stat-todo">0</h3>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-1 h-full bg-amber-500"></div>
-                            <p class="text-[9px] sm:text-[10px] font-black text-amber-600 mb-1 uppercase tracking-wider">در دست اقدام</p>
-                            <h3 class="text-xl sm:text-2xl font-black text-amber-900" id="stat-inprogress">0</h3>
-                        </div>
-                        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-1 h-full bg-emerald-500"></div>
-                            <p class="text-[9px] sm:text-[10px] font-black text-emerald-600 mb-1 uppercase tracking-wider">پایان یافته</p>
-                            <h3 class="text-xl sm:text-2xl font-black text-emerald-900" id="stat-done">0</h3>
-                        </div>
-                    </div>
-
-                    <!-- Wrapper با اسکرول افقی مخصوص موبایل -->
-                    <div class="flex gap-4 md:gap-6 h-full pb-8 items-start overflow-x-auto kanban-scroll snap-x snap-mandatory">
-                        
-                        <div class="w-[85vw] max-w-[320px] flex-shrink-0 snap-center flex flex-col bg-slate-100/60 rounded-2xl border border-slate-200 max-h-[75vh]">
-                            <div class="p-3 sm:p-4 border-b border-slate-200 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                                <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-500"></span> برای انجام</h3>
-                                <span class="bg-white text-slate-500 text-[10px] font-black px-2 py-1 rounded-md border border-slate-200" id="badge-todo">0</span>
-                            </div>
-                            <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo"></div>
-                        </div>
-
-                        <div class="w-[85vw] max-w-[320px] flex-shrink-0 snap-center flex flex-col bg-amber-50/40 rounded-2xl border border-amber-100 max-h-[75vh]">
-                            <div class="p-3 sm:p-4 border-b border-amber-100 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                                <h3 class="font-black text-amber-900 text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> در دست اقدام</h3>
-                                <span class="bg-white text-amber-600 text-[10px] font-black px-2 py-1 rounded-md border border-amber-200" id="badge-inprogress">0</span>
-                            </div>
-                            <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress"></div>
-                        </div>
-
-                        <div class="w-[85vw] max-w-[320px] flex-shrink-0 snap-center flex flex-col bg-emerald-50/40 rounded-2xl border border-emerald-100 max-h-[75vh]">
-                            <div class="p-3 sm:p-4 border-b border-emerald-100 bg-white/50 rounded-t-2xl flex justify-between items-center shrink-0">
-                                <h3 class="font-black text-emerald-900 text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> انجام شده</h3>
-                                <span class="bg-white text-emerald-600 text-[10px] font-black px-2 py-1 rounded-md border border-emerald-200" id="badge-done">0</span>
-                            </div>
-                            <div class="p-3 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- تب تقویم تعاملی وظایف -->
-                <div id="view-taskcalendar" class="hidden h-full animate-fade-up flex-col gap-4">
-                    <div class="bg-white border border-slate-200 p-3 sm:p-4 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
-                        <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl w-full md:w-auto justify-center">
-                            <button onclick="setCalView('month')" id="cal-btn-month" class="px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none">نمای ماهانه</button>
-                            <button onclick="setCalView('week')" id="cal-btn-week" class="px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none">نمای هفتگی</button>
-                        </div>
-                        
-                        <div class="flex items-center justify-between w-full md:w-auto gap-4">
-                            <button onclick="changeCalDate(-1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-right"></i></button>
-                            <h3 id="cal-header-title" class="font-black text-slate-800 text-base min-w-[120px] text-center">آبان 1403</h3>
-                            <button onclick="changeCalDate(1)" class="w-8 h-8 flex items-center justify-center bg-slate-50 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-left"></i></button>
-                        </div>
-                        
-                        <button onclick="resetCalToToday()" class="w-full md:w-auto px-4 py-2 text-xs font-black bg-teal-50 text-teal-700 rounded-xl hover:bg-teal-100 transition border border-teal-200">رفتن به امروز</button>
-                    </div>
-
-                    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm flex-1 overflow-hidden flex flex-col">
-                        <div class="flex-1 overflow-auto custom-scrollbar">
-                            <div class="min-w-[600px] flex flex-col h-full">
-                                <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50 shrink-0">
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">شنبه</div>
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">یک‌شنبه</div>
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">دوشنبه</div>
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">سه‌شنبه</div>
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">چهارشنبه</div>
-                                    <div class="py-3 text-center font-black text-slate-500 text-xs">پنج‌شنبه</div>
-                                    <div class="py-3 text-center font-black text-rose-500 text-xs">جمعه</div>
-                                </div>
-                                <div id="cal-grid" class="flex-1 grid grid-cols-7 bg-slate-200 gap-[1px]">
-                                    <!-- Calendar cells will be injected here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- تب پیگیری ارجاعات من -->
-                <div id="view-tracking" class="hidden h-full animate-fade-up flex-col gap-6">
-                    <div class="bg-white rounded-3xl border border-indigo-200 shadow-sm flex-1 overflow-hidden flex flex-col">
-                        <div class="p-4 sm:p-5 border-b border-indigo-100 flex justify-between items-center bg-indigo-50/50">
-                            <div>
-                                <h3 class="font-black text-slate-800 text-indigo-800 text-sm sm:text-base"><i class="fa-solid fa-network-wired ml-2"></i> وضعیت کارهای ارجاع داده شده</h3>
-                                <p class="text-[10px] sm:text-xs text-slate-500 font-bold mt-1">پیگیری کارهایی که برای دیگران ثبت کرده‌اید.</p>
-                            </div>
-                        </div>
-                        <div class="flex-1 overflow-auto p-2 sm:p-4 custom-scrollbar">
-                            <table class="w-full min-w-[700px] text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th class="p-4 font-black">عنوان وظیفه</th>
-                                        <th class="p-4 font-black text-center">ارجاع شده به (مسئول)</th>
-                                        <th class="p-4 font-black text-center">وضعیت تایید مدیر</th>
-                                        <th class="p-4 font-black text-center">مرحله اجرا روی بورد</th>
-                                        <th class="p-4 font-black text-center">درصد پیشرفت</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100" id="tracking-table-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- تب عملکرد و راندمان -->
-                <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6" id="team-cards-container"></div>
                     
-                    <div id="member-detail-section" class="mt-6 sm:mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 hidden animate-fade-up flex-col max-h-[50vh]">
-                        <div class="flex justify-between items-center mb-4 sm:mb-6 border-b border-slate-100 pb-3 sm:pb-4 shrink-0">
-                            <h3 class="font-black text-slate-800 text-sm sm:text-base" id="detail-member-name">وظایف کاربر</h3>
-                            <button onclick="document.getElementById('member-detail-section').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 bg-slate-50 p-2 rounded-lg"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <!-- Search Mobile -->
+                    <div class="lg:hidden relative w-full mb-5">
+                        <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInputMobile" onkeyup="document.getElementById('searchInput').value = this.value; filterTasks();" placeholder="جستجو..." class="w-full bg-white border border-slate-200 shadow-sm focus:border-teal-500 rounded-2xl py-3.5 pr-12 pl-4 outline-none text-xs font-bold text-slate-700">
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-4 gap-3 lg:gap-6 mb-6">
+                        <div class="col-span-2 lg:col-span-1 bg-white p-4 lg:p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-list-check"></i></div>
+                            <div><p class="text-[10px] lg:text-xs font-bold text-slate-500 mb-0.5">کل وظایف</p><h3 class="text-xl lg:text-2xl font-black text-slate-800" id="stat-total">0</h3></div>
+                        </div>
+                        <div class="col-span-2 lg:col-span-1 bg-white p-4 lg:p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-xl shrink-0"><i class="fa-regular fa-circle"></i></div>
+                            <div><p class="text-[10px] lg:text-xs font-bold text-sky-600 mb-0.5">برای انجام</p><h3 class="text-xl lg:text-2xl font-black text-sky-900" id="stat-todo">0</h3></div>
+                        </div>
+                        <div class="col-span-2 lg:col-span-1 bg-white p-4 lg:p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-spinner fa-spin-pulse"></i></div>
+                            <div><p class="text-[10px] lg:text-xs font-bold text-amber-600 mb-0.5">در دست اقدام</p><h3 class="text-xl lg:text-2xl font-black text-amber-900" id="stat-inprogress">0</h3></div>
+                        </div>
+                        <div class="col-span-2 lg:col-span-1 bg-white p-4 lg:p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-check-double"></i></div>
+                            <div><p class="text-[10px] lg:text-xs font-bold text-emerald-600 mb-0.5">پایان یافته</p><h3 class="text-xl lg:text-2xl font-black text-emerald-900" id="stat-done">0</h3></div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Segmented Control (Tabs) -->
+                    <div class="lg:hidden flex bg-slate-200/50 p-1.5 rounded-2xl mb-5 sticky top-0 z-10 backdrop-blur-md">
+                        <button onclick="switchKanbanCol('todo')" id="btn-col-todo" class="k-tab active flex-1 py-2.5 rounded-[14px] text-xs font-bold">برای انجام <span id="m-badge-todo" class="ml-1 text-[9px] bg-slate-200 px-1.5 py-0.5 rounded-md">0</span></button>
+                        <button onclick="switchKanbanCol('inprogress')" id="btn-col-inprogress" class="k-tab flex-1 py-2.5 rounded-[14px] text-xs font-bold">در اقدام <span id="m-badge-inprogress" class="ml-1 text-[9px] bg-slate-200 px-1.5 py-0.5 rounded-md">0</span></button>
+                        <button onclick="switchKanbanCol('done')" id="btn-col-done" class="k-tab flex-1 py-2.5 rounded-[14px] text-xs font-bold">پایان یافته <span id="m-badge-done" class="ml-1 text-[9px] bg-slate-200 px-1.5 py-0.5 rounded-md">0</span></button>
+                    </div>
+
+                    <!-- Kanban Grid -->
+                    <div class="flex flex-col lg:flex-row gap-6 h-full min-h-[50vh]">
+                        
+                        <!-- Col: To Do -->
+                        <div id="wrapper-todo" class="w-full lg:w-1/3 flex flex-col bg-slate-100/50 lg:bg-transparent rounded-3xl lg:rounded-none">
+                            <div class="hidden lg:flex p-4 mb-2 bg-white rounded-2xl shadow-sm border border-slate-100 justify-between items-center shrink-0">
+                                <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500 shadow-inner"></span> برای انجام</h3>
+                                <span class="bg-sky-50 text-sky-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-todo">0</span>
+                            </div>
+                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-4 kanban-col custom-scrollbar pb-4" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo"></div>
+                        </div>
+
+                        <!-- Col: In Progress -->
+                        <div id="wrapper-inprogress" class="w-full lg:w-1/3 hidden lg:flex flex-col bg-slate-100/50 lg:bg-transparent rounded-3xl lg:rounded-none">
+                            <div class="hidden lg:flex p-4 mb-2 bg-white rounded-2xl shadow-sm border border-slate-100 justify-between items-center shrink-0">
+                                <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500 shadow-inner"></span> در دست اقدام</h3>
+                                <span class="bg-amber-50 text-amber-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-inprogress">0</span>
+                            </div>
+                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-4 kanban-col custom-scrollbar pb-4" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress"></div>
+                        </div>
+
+                        <!-- Col: Done -->
+                        <div id="wrapper-done" class="w-full lg:w-1/3 hidden lg:flex flex-col bg-slate-100/50 lg:bg-transparent rounded-3xl lg:rounded-none">
+                            <div class="hidden lg:flex p-4 mb-2 bg-white rounded-2xl shadow-sm border border-slate-100 justify-between items-center shrink-0">
+                                <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 shadow-inner"></span> انجام شده</h3>
+                                <span class="bg-emerald-50 text-emerald-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-done">0</span>
+                            </div>
+                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-4 kanban-col custom-scrollbar pb-4" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" id="team-cards-container"></div>
+                    
+                    <div id="member-detail-section" class="mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 hidden animate-fade-up flex-col max-h-[50vh]">
+                        <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4 shrink-0">
+                            <h3 class="font-black text-slate-800 text-lg" id="detail-member-name">وظایف کاربر</h3>
+                            <button onclick="document.getElementById('member-detail-section').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 bg-slate-50 p-2 rounded-xl"><i class="fa-solid fa-xmark text-lg"></i></button>
                         </div>
                         <div class="flex-1 overflow-auto custom-scrollbar">
-                            <table class="w-full min-w-[500px] text-right text-sm whitespace-nowrap">
+                            <table class="w-full min-w-[600px] text-right text-sm whitespace-nowrap">
                                 <thead class="text-slate-500 bg-slate-50 sticky top-0 z-10">
                                     <tr>
-                                        <th class="p-3 font-black rounded-r-xl">عنوان وظیفه</th>
-                                        <th class="p-3 font-black text-center">وضعیت</th>
-                                        <th class="p-3 font-black text-center">پیشرفت</th>
-                                        <th class="p-3 font-black text-center rounded-l-xl">سررسید</th>
+                                        <th class="p-4 font-black rounded-r-xl">عنوان وظیفه</th>
+                                        <th class="p-4 font-black text-center">وضعیت</th>
+                                        <th class="p-4 font-black text-center">پیشرفت</th>
+                                        <th class="p-4 font-black text-center rounded-l-xl">سررسید</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100" id="detail-member-tasks"></tbody>
@@ -357,109 +334,166 @@
                     </div>
                 </div>
 
-                <!-- تب تقویم جلسات -->
                 <div id="view-calendar" class="hidden h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                        <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 h-fit">
-                            <h3 class="font-black text-slate-800 mb-4 sm:mb-6 border-b border-slate-100 pb-3"><i class="fa-regular fa-calendar-plus text-teal-600 ml-2"></i> زمان‌بندی جلسه</h3>
-                            <form onsubmit="event.preventDefault(); submitMeeting();" id="meetingForm" class="space-y-4">
+                        <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-100 shadow-sm p-6 h-fit">
+                            <h3 class="font-black text-slate-800 mb-6 border-b border-slate-100 pb-4 text-lg"><i class="fa-regular fa-calendar-plus text-teal-500 ml-2"></i> زمان‌بندی جلسه</h3>
+                            <form onsubmit="event.preventDefault(); submitMeeting();" id="meetingForm" class="space-y-5">
                                 <div>
-                                    <label class="block text-xs font-black text-slate-700 mb-1.5">موضوع جلسه</label>
-                                    <input type="text" id="meetingTitle" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" required>
+                                    <label class="block text-xs font-black text-slate-700 mb-2">موضوع جلسه</label>
+                                    <input type="text" id="meetingTitle" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" required>
                                 </div>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-2">تاریخ (شمسی)</label>
+                                    <input type="text" id="meetingDate" data-jdp class="w-full border-2 border-slate-100 rounded-2xl p-3.5 text-center focus:border-teal-500 outline-none font-black text-sm bg-slate-50 cursor-pointer" readonly required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1.5">تاریخ (شمسی)</label>
-                                        <input type="text" id="meetingDate" data-jdp class="w-full border-2 border-slate-200 rounded-xl p-3 text-center focus:border-teal-500 outline-none font-black text-xs bg-slate-50 cursor-pointer" readonly required>
+                                        <label class="block text-xs font-bold text-slate-700 mb-2">ساعت شروع</label>
+                                        <input type="time" id="meetingTime" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 text-center focus:border-teal-500 outline-none font-bold bg-slate-50" required>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ساعت شروع</label>
-                                        <input type="time" id="meetingTime" class="w-full border-2 border-slate-200 rounded-xl p-3 text-center focus:border-teal-500 outline-none font-bold bg-slate-50" required>
+                                        <label class="block text-xs font-bold text-slate-700 mb-2">تکرار</label>
+                                        <select id="meetingRecurring" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50">
+                                            <option value="none">بدون تکرار</option>
+                                            <option value="weekly">هفتگی</option>
+                                            <option value="monthly">ماهانه</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">تکرار دوره‌ای</label>
-                                    <select id="meetingRecurring" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50">
-                                        <option value="none">بدون تکرار (یکبار)</option>
-                                        <option value="weekly">تکرار هفتگی</option>
-                                        <option value="monthly">تکرار ماهانه</option>
-                                    </select>
+                                    <label class="block text-xs font-bold text-slate-700 mb-2">مکان/لینک</label>
+                                    <input type="text" id="meetingLocation" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">مکان/لینک</label>
-                                    <input type="text" id="meetingLocation" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-xs bg-slate-50">
-                                </div>
-                                <button type="submit" id="btn-submit-meeting" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl py-3 mt-2 transition shadow-lg">ثبت در تقویم</button>
+                                <button type="submit" id="btn-submit-meeting" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black rounded-2xl py-4 mt-2 transition shadow-lg">ثبت در تقویم</button>
                             </form>
                         </div>
 
-                        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col overflow-hidden h-full max-h-[80vh]">
-                            <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-                                <h3 class="font-black text-slate-800">جلسات برنامه‌ریزی شده</h3>
+                        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col overflow-hidden h-full max-h-[80vh]">
+                            <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 shrink-0">
+                                <h3 class="font-black text-slate-800 text-lg">جلسات برنامه‌ریزی شده</h3>
                             </div>
-                            <div class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar" id="meetings-list-container"></div>
+                            <div class="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar" id="meetings-list-container"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- تب داشبورد تحلیل -->
+                <!-- تب تقویم تعاملی وظایف -->
+                <div id="view-taskcalendar" class="hidden h-full animate-fade-up flex-col gap-4">
+                    <div class="bg-white border border-slate-100 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
+                        <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl w-full md:w-auto justify-center">
+                            <button onclick="setCalView('month')" id="cal-btn-month" class="px-5 py-2 text-xs font-black rounded-xl transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none">نمای ماهانه</button>
+                            <button onclick="setCalView('week')" id="cal-btn-week" class="px-5 py-2 text-xs font-black rounded-xl transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none">نمای هفتگی</button>
+                        </div>
+                        <div class="flex items-center justify-between w-full md:w-auto gap-6">
+                            <button onclick="changeCalDate(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 rounded-xl hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-right"></i></button>
+                            <h3 id="cal-header-title" class="font-black text-slate-800 text-lg min-w-[120px] text-center">آبان 1403</h3>
+                            <button onclick="changeCalDate(1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 rounded-xl hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-left"></i></button>
+                        </div>
+                        <button onclick="resetCalToToday()" class="w-full md:w-auto px-6 py-2.5 text-xs font-black bg-teal-50 text-teal-700 rounded-xl hover:bg-teal-100 transition">برو به امروز</button>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-3xl shadow-sm flex-1 overflow-hidden flex flex-col">
+                        <div class="flex-1 overflow-auto custom-scrollbar">
+                            <div class="min-w-[700px] flex flex-col h-full">
+                                <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/80 shrink-0">
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">شنبه</div>
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">یک‌شنبه</div>
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">دوشنبه</div>
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">سه‌شنبه</div>
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">چهارشنبه</div>
+                                    <div class="py-4 text-center font-black text-slate-500 text-xs">پنج‌شنبه</div>
+                                    <div class="py-4 text-center font-black text-rose-500 text-xs">جمعه</div>
+                                </div>
+                                <div id="cal-grid" class="flex-1 grid grid-cols-7 bg-slate-100 gap-[1px]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- پیگیری ارجاعات -->
+                <div id="view-tracking" class="hidden h-full animate-fade-up flex-col gap-6">
+                    <div class="bg-white rounded-3xl border border-indigo-100 shadow-sm flex-1 overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-indigo-50 flex justify-between items-center bg-indigo-50/30">
+                            <div>
+                                <h3 class="font-black text-indigo-900 text-lg"><i class="fa-solid fa-network-wired ml-2 text-indigo-500"></i> وضعیت ارجاعات من</h3>
+                                <p class="text-xs text-slate-500 font-bold mt-1">کارهایی که برای دیگران ثبت کرده‌اید در چه مرحله‌ای هستند؟</p>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-auto p-4 custom-scrollbar">
+                            <table class="w-full min-w-[700px] text-right text-sm whitespace-nowrap">
+                                <thead class="text-slate-500 bg-slate-50 rounded-xl">
+                                    <tr>
+                                        <th class="p-4 font-black rounded-r-xl">عنوان وظیفه</th>
+                                        <th class="p-4 font-black text-center">شخص مسئول</th>
+                                        <th class="p-4 font-black text-center">وضعیت تایید</th>
+                                        <th class="p-4 font-black text-center">مرحله در بورد</th>
+                                        <th class="p-4 font-black text-center rounded-l-xl">پیشرفت</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50" id="tracking-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- داشبورد تحلیل -->
                 <div id="view-analytics" class="hidden h-full animate-fade-up">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 h-full">
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 flex flex-col">
-                            <h3 class="font-black text-slate-800 mb-4 border-b border-slate-100 pb-3">وضعیت کلی پروژه‌ها</h3>
-                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[250px] sm:min-h-[300px]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col">
+                            <h3 class="font-black text-slate-800 mb-6 text-lg border-b border-slate-50 pb-4">وضعیت کلی پروژه‌ها</h3>
+                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[300px]">
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 flex flex-col">
-                            <h3 class="font-black text-slate-800 mb-4 border-b border-slate-100 pb-3">حجم کاری اعضای تیم</h3>
-                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[250px] sm:min-h-[300px]">
+                        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col">
+                            <h3 class="font-black text-slate-800 mb-6 text-lg border-b border-slate-50 pb-4">حجم کاری اعضا</h3>
+                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[300px]">
                                 <canvas id="workloadChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- تب پنل مدیریت -->
+                <!-- پنل مدیریت (تاییدات) -->
                 <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-6">
                     <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
-                        <div class="p-4 sm:p-5 border-b border-amber-100 flex justify-between items-center bg-amber-50/50 shrink-0">
+                        <div class="p-6 border-b border-amber-100 flex justify-between items-center bg-amber-50/50 shrink-0">
                             <div>
-                                <h3 class="font-black text-slate-800 text-amber-700 text-sm sm:text-base"><i class="fa-solid fa-clipboard-check ml-2"></i> درخواست‌های نیازمند تایید</h3>
+                                <h3 class="font-black text-amber-800 text-lg"><i class="fa-solid fa-clipboard-check ml-2 text-amber-500"></i> کارتابل تاییدات مدیریت</h3>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-auto custom-scrollbar p-2 sm:p-4">
+                        <div class="flex-1 overflow-auto custom-scrollbar p-4">
                             <table class="w-full min-w-[750px] text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-50 border-b border-slate-100 sticky top-0">
+                                <thead class="text-slate-500 bg-slate-50 sticky top-0">
                                     <tr>
-                                        <th class="p-4 font-black">عنوان وظیفه</th>
-                                        <th class="p-4 font-black text-center">ثبت کننده درخواست</th>
-                                        <th class="p-4 font-black text-center">ارجاع شده به</th>
-                                        <th class="p-4 font-black text-left pl-6">عملیات مدیریت</th>
+                                        <th class="p-4 font-black rounded-r-xl">عنوان درخواست</th>
+                                        <th class="p-4 font-black text-center">ثبت کننده</th>
+                                        <th class="p-4 font-black text-center">هدف ارجاع</th>
+                                        <th class="p-4 font-black text-left pl-6 rounded-l-xl">عملیات مدیریت</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100" id="pending-table-body"></tbody>
+                                <tbody class="divide-y divide-slate-50" id="pending-table-body"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-3xl border border-rose-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
-                        <div class="p-4 sm:p-5 border-b border-rose-100 flex justify-between items-center bg-rose-50/50 shrink-0">
+                        <div class="p-6 border-b border-rose-100 flex justify-between items-center bg-rose-50/50 shrink-0">
                             <div>
-                                <h3 class="font-black text-slate-800 text-rose-700 text-sm sm:text-base"><i class="fa-solid fa-trash-can-arrow-up ml-2"></i> سطل زباله و تاییدیه حذف</h3>
+                                <h3 class="font-black text-rose-800 text-lg"><i class="fa-solid fa-trash-can-arrow-up ml-2 text-rose-500"></i> زباله‌دان و حذف نهایی</h3>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-auto custom-scrollbar p-2 sm:p-4">
+                        <div class="flex-1 overflow-auto custom-scrollbar p-4">
                             <table class="w-full min-w-[700px] text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-50 border-b border-slate-100 sticky top-0">
+                                <thead class="text-slate-500 bg-slate-50 sticky top-0">
                                     <tr>
-                                        <th class="p-4 font-black">عنوان کار حذف شده</th>
-                                        <th class="p-4 font-black text-center">شخص مسئول</th>
-                                        <th class="p-4 font-black text-center">تاریخ اقدام</th>
-                                        <th class="p-4 font-black text-left pl-6">عملیات مدیریت</th>
+                                        <th class="p-4 font-black rounded-r-xl">عنوان کار حذف شده</th>
+                                        <th class="p-4 font-black text-center">مسئول</th>
+                                        <th class="p-4 font-black text-center">تاریخ</th>
+                                        <th class="p-4 font-black text-left pl-6 rounded-l-xl">عملیات</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100" id="archive-table-body"></tbody>
+                                <tbody class="divide-y divide-slate-50" id="archive-table-body"></tbody>
                             </table>
                         </div>
                     </div>
@@ -467,54 +501,85 @@
 
             </div>
         </main>
+        
+        <nav class="lg:hidden fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50 flex justify-around px-2 pb-safe pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+            <button onclick="switchTab('kanban')" id="mob-btn-kanban" class="bottom-nav-item active flex flex-col items-center p-2 w-16">
+                <div class="nav-icon-bg mb-1"><i class="fa-solid fa-kanban text-xl"></i></div>
+                <span class="text-[9px] font-black">بورد</span>
+            </button>
+            <button onclick="switchTab('taskcalendar')" id="mob-btn-taskcalendar" class="bottom-nav-item flex flex-col items-center p-2 w-16 text-slate-400">
+                <div class="nav-icon-bg mb-1"><i class="fa-solid fa-calendar-day text-xl"></i></div>
+                <span class="text-[9px] font-bold">تقویم</span>
+            </button>
+            
+            <!-- Center Floating Action Button -->
+            <div class="relative -top-6 flex flex-col items-center">
+                <button onclick="openTaskModal()" class="w-14 h-14 bg-teal-500 text-white rounded-full shadow-lg shadow-teal-300 flex items-center justify-center text-2xl transform transition hover:scale-105 active:scale-95 border-4 border-white">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <button onclick="switchTab('performance')" id="mob-btn-performance" class="bottom-nav-item flex flex-col items-center p-2 w-16 text-slate-400">
+                <div class="nav-icon-bg mb-1"><i class="fa-solid fa-chart-pie text-xl"></i></div>
+                <span class="text-[9px] font-bold">عملکرد</span>
+            </button>
+            <button onclick="switchTab('archive')" id="mob-btn-archive" class="bottom-nav-item hidden flex flex-col items-center p-2 w-16 text-slate-400 relative">
+                <div class="nav-icon-bg mb-1"><i class="fa-solid fa-shield-halved text-xl"></i></div>
+                <span class="text-[9px] font-bold">مدیریت</span>
+                <span id="admin-badge-mob" class="hidden absolute top-1 right-2 w-3 h-3 bg-rose-500 rounded-full animate-pulse"></span>
+            </button>
+        </nav>
+
     </div>
 
-    <!-- مودال ثبت وظیفه -->
-    <div id="taskModal" class="fixed inset-0 hidden items-center justify-center modal-overlay p-3 sm:p-4 z-[100]">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-up border border-slate-200 max-h-[95dvh]">
-            <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 shrink-0">
+    <div id="taskModal" class="fixed inset-0 hidden items-end sm:items-center justify-center modal-overlay p-0 sm:p-4 z-[1000] transition-all">
+        <!-- Bottom Sheet on Mobile, Centered Modal on Desktop -->
+        <div class="bg-white rounded-t-[2rem] sm:rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col animate-slide-up border border-slate-100 max-h-[90dvh]">
+            
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-[2rem] sm:rounded-t-3xl shrink-0">
                 <div>
-                    <h3 class="text-base sm:text-lg font-black text-slate-800" id="modalTitle"><i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>فرم جامع وظیفه</h3>
-                    <p class="text-[10px] sm:text-xs text-slate-500 font-bold mt-1">مدیریت اطلاعات و موانع پروژه</p>
+                    <h3 class="text-xl font-black text-slate-800" id="modalTitle"><i class="fa-solid fa-file-signature text-teal-500 ml-2"></i> فرم وظیفه</h3>
+                    <p class="text-xs text-slate-500 font-bold mt-1">جزئیات کار را وارد یا ویرایش کنید</p>
                 </div>
-                <button type="button" onclick="closeTaskModal()" class="text-slate-400 hover:text-rose-500 transition bg-white p-2 rounded-xl shadow-sm border border-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeTaskModal()" class="w-10 h-10 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 transition rounded-xl flex items-center justify-center shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <form id="taskForm" onsubmit="event.preventDefault(); submitTask();" class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
+            <form id="taskForm" onsubmit="event.preventDefault(); submitTask();" class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 <input type="hidden" id="taskIdHidden">
-                <input type="hidden" id="taskStatusHidden" value="todo">
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <div class="space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Right Col -->
+                    <div class="space-y-5">
                         <div>
-                            <label class="block text-xs font-black text-slate-700 mb-1.5">عنوان وظیفه (اجباری)</label>
-                            <input type="text" id="taskTitle" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50" required>
+                            <label class="block text-xs font-black text-slate-700 mb-2">عنوان وظیفه (اجباری)</label>
+                            <input type="text" id="taskTitle" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none font-bold text-sm bg-slate-50 transition" required>
                         </div>
                         
                         <div>
-                            <label class="block text-xs font-black text-slate-700 mb-1.5">شرح وظیفه و خروجی مورد انتظار</label>
-                            <textarea id="taskDesc" rows="4" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50 leading-relaxed"></textarea>
+                            <label class="block text-xs font-black text-slate-700 mb-2">شرح وظیفه و خروجی مورد انتظار</label>
+                            <textarea id="taskDesc" rows="4" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none text-sm font-medium bg-slate-50 transition leading-relaxed"></textarea>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-black text-slate-700 mb-1.5">موانع و یادداشت‌ها</label>
-                            <textarea id="taskObstacles" rows="3" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-rose-300 outline-none text-xs font-bold bg-rose-50 leading-relaxed placeholder-rose-300"></textarea>
+                            <label class="block text-xs font-black text-slate-700 mb-2">موانع و یادداشت‌ها</label>
+                            <textarea id="taskObstacles" rows="2" class="w-full border-2 border-rose-100 rounded-2xl p-3.5 focus:border-rose-400 outline-none text-sm font-medium bg-rose-50 transition leading-relaxed placeholder-rose-300"></textarea>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="block text-xs font-black text-slate-700">درصد پیشرفت کار</label>
-                                <span id="progressVal" class="text-sm font-black text-teal-600">0%</span>
+                    <!-- Left Col -->
+                    <div class="space-y-5">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="block text-xs font-black text-slate-700">درصد پیشرفت</label>
+                                <span id="progressVal" class="text-lg font-black text-teal-600 bg-white px-3 py-1 rounded-xl shadow-sm border border-slate-100">0%</span>
                             </div>
                             <input type="range" id="taskProgress" min="0" max="100" value="0" step="5" oninput="document.getElementById('progressVal').innerText = this.value + '%'">
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-black text-slate-700 mb-1.5">شخص مسئول</label>
-                                <select id="taskAssignee" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                                <label class="block text-xs font-black text-slate-700 mb-2">شخص مسئول</label>
+                                <select id="taskAssignee" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
                                     <option value="تخصیص نیافته">آزاد (بدون مسئول)</option>
                                     <option value="محمدحسین اوصالی (مدیر)">محمدحسین اوصالی (مدیر)</option>
                                     <option value="علیرضا عباسپور (مدیر)">علیرضا عباسپور (مدیر)</option>
@@ -523,52 +588,60 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-black text-slate-700 mb-1.5">دسته‌بندی</label>
-                                <select id="taskCategory" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
-                                    <option value="مالی و حسابداری">مالی و حسابداری</option>
-                                    <option value="سیستم و فنی">سیستم و فنی</option>
-                                    <option value="پشتیبانی اعضا">پشتیبانی اعضا</option>
-                                    <option value="عمومی">عمومی / سایر</option>
+                                <label class="block text-xs font-black text-slate-700 mb-2">وضعیت در بورد (موبایل)</label>
+                                <select id="taskStatusHidden" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50 text-indigo-700">
+                                    <option value="todo">برای انجام</option>
+                                    <option value="in_progress">در دست اقدام</option>
+                                    <option value="done">پایان یافته</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-black text-slate-700 mb-1.5">تاریخ سررسید</label>
+                                <label class="block text-xs font-black text-slate-700 mb-2">تاریخ سررسید</label>
                                 <div class="relative">
-                                    <i class="fa-regular fa-calendar-check absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-600"></i>
-                                    <input type="text" id="taskDueDate" data-jdp class="w-full border-2 border-slate-200 rounded-xl p-3 pl-8 text-left focus:border-teal-500 outline-none text-xs font-black bg-slate-50 cursor-pointer" readonly>
+                                    <i class="fa-regular fa-calendar-check absolute left-4 top-1/2 transform -translate-y-1/2 text-teal-500"></i>
+                                    <input type="text" id="taskDueDate" data-jdp class="w-full border-2 border-slate-100 rounded-2xl p-3.5 pl-10 text-left focus:border-teal-500 outline-none text-xs font-black bg-slate-50 cursor-pointer" readonly>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-black text-slate-700 mb-1.5">اولویت</label>
-                                <select id="taskPriority" class="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                                <label class="block text-xs font-black text-slate-700 mb-2">اولویت</label>
+                                <select id="taskPriority" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
                                     <option value="عادی">🟢 عادی</option>
                                     <option value="مهم">🟠 مهم</option>
                                     <option value="فوری">🔴 فوری و حیاتی</option>
                                 </select>
                             </div>
                         </div>
+                        
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-2">دسته‌بندی</label>
+                            <select id="taskCategory" class="w-full border-2 border-slate-100 rounded-2xl p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                                <option value="مالی و حسابداری">مالی و حسابداری</option>
+                                <option value="سیستم و فنی">سیستم و فنی</option>
+                                <option value="پشتیبانی اعضا">پشتیبانی اعضا</option>
+                                <option value="عمومی">عمومی / سایر</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </form>
             
-            <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-3 shrink-0">
-                <button type="button" onclick="closeTaskModal()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-black text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-100 transition text-sm">انصراف</button>
-                <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-3 rounded-xl font-black text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">ثبت وظیفه</span>
+            <div class="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row justify-end gap-3 shrink-0 pb-safe">
+                <button type="button" onclick="closeTaskModal()" class="w-full sm:w-auto px-6 py-4 rounded-xl font-black text-slate-500 bg-slate-50 hover:bg-slate-100 transition text-sm">انصراف</button>
+                <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-4 rounded-xl font-black text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">ثبت نهایی</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- کدهای اجرایی جاوااسکریپت -->
     <script>
         // Init Jalali DatePicker
         jalaliDatepicker.startWatch({ minDate: "attr", maxDate: "attr", time: false, hideAfterChange: true, hasHiddenInput: true });
 
-        // -- Role Based Access Control (RBAC) Config --
+        // -- Role Based Access Control (RBAC) --
         const MANAGERS_EMAILS = ['osali5000@gmail.com', 'abbaspour@qanat.ir'];
         const USER_NAMES = {
             'osali5000@gmail.com': 'محمدحسین اوصالی (مدیر)',
@@ -577,7 +650,7 @@
             'mousavian@qanat.ir': 'سید محمد حسین موسویان'
         };
 
-        // -- Utility Functions (Persian Digits Converter) --
+        // Utility: Persian Digits
         function toEnglishDigits(str) {
             if(!str) return str;
             str = str.toString();
@@ -586,7 +659,7 @@
             return str.replace(/[۰-۹]/g, w => persianDigits.indexOf(w)).replace(/[٠-٩]/g, w => arabicDigits.indexOf(w));
         }
 
-        // -- Jalali Calendar Micro-Library --
+        // Jalali Calendar Engine
         const JalaliUtils = {
             isLeapYear: function(jy) { return ((jy % 33) * 8 + 24) % 33 < 8; },
             daysInMonth: function(jy, jm) {
@@ -623,7 +696,7 @@
             }
         };
 
-        // Database Variables
+        // State variables
         let supaClient = null;
         let allTasksList = []; 
         let activeTasksList = []; 
@@ -632,26 +705,20 @@
         let chartInstances = {};
         let confirmCallback = null;
         let pollingInterval = null;
-
-        // Calendar State
         let calState = { view: 'month', year: 1403, month: 8, day: 1 };
         const monthNames = ["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
 
-        function isAdmin() { 
-            return currentUser && MANAGERS_EMAILS.includes(currentUser.email.toLowerCase()); 
-        }
-
+        function isAdmin() { return currentUser && MANAGERS_EMAILS.includes(currentUser.email.toLowerCase()); }
         function getCurrentUserName() {
             if(!currentUser) return 'نامشخص';
             return USER_NAMES[currentUser.email.toLowerCase()] || currentUser.email.split('@')[0];
         }
-
         function getInitials(name) {
             if(!name || name === 'تخصیص نیافته') return '?';
             return name.split(' ')[0].substring(0, 1).toUpperCase();
         }
 
-        // --- Date Normalization for Flawless Overdue Logic ---
+        // Date Normalization
         function normalizeJalaliDate(dateStr) {
             if(!dateStr) return '';
             let englishStr = toEnglishDigits(dateStr);
@@ -662,12 +729,10 @@
             let d = parts[2].padStart(2, '0');
             return `${y}/${m}/${d}`;
         }
-
         function getTodayJalaliStr() {
             const t = JalaliUtils.getToday();
             return `${t.y}/${t.m.toString().padStart(2, '0')}/${t.d.toString().padStart(2, '0')}`;
         }
-
         function isOverdue(dateString) {
             if (!dateString) return false;
             const today = getTodayJalaliStr();
@@ -675,18 +740,18 @@
             return normalizedTarget < today; 
         }
 
-        // --- Core Supabase ---
+        // Database Setup
         const setupSupabase = () => {
             try {
                 supaClient = window.supabase.createClient('https://fsbfdyipycoeykmhiaox.supabase.co', 'sb_publishable_fSA7iR064z30VOjrjviaCg_AF7J7sYh');
                 
                 const btn = document.getElementById('login-btn');
-                btn.disabled = false; btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
-                btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
+                btn.disabled = false; btn.innerHTML = 'ورود به محیط کاربری <i class="fa-solid fa-arrow-left ml-2"></i>';
+                btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 mt-4";
                 
                 document.getElementById('email').disabled = false; document.getElementById('password').disabled = false;
-                document.getElementById('login-subtitle').innerHTML = '<span class="text-emerald-600"><i class="fa-solid fa-shield-check"></i> ارتباط امن برقرار شد.</span>';
-                document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-emerald-500";
+                document.getElementById('login-subtitle').innerHTML = '<span class="text-teal-600 font-black"><i class="fa-solid fa-circle-check"></i> ارتباط امن برقرار شد</span>';
+                document.getElementById('connection-status').className = "absolute top-0 left-0 w-full h-1.5 bg-teal-500";
 
                 supaClient.auth.onAuthStateChange((event, session) => {
                     if (session && session.user) { 
@@ -699,7 +764,7 @@
             } catch (err) { showToast('خطا در تنظیمات پایگاه داده', 'error'); }
         };
 
-        if (typeof window.supabase !== 'undefined') { setupSupabase(); } 
+        if (typeof window.supabase !== 'undefined') setupSupabase();
         else {
             const script = document.createElement('script');
             script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
@@ -708,25 +773,26 @@
             document.head.appendChild(script);
         }
 
+        // Auth Methods
         async function handleLogin() {
             if(!supaClient) return;
             const email = document.getElementById('email').value.trim().toLowerCase(); 
             const password = document.getElementById('password').value;
             const btn = document.getElementById('login-btn'); 
             
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> در حال اعتبارسنجی...';
-            btn.className = "w-full bg-slate-800 text-white font-black rounded-xl p-4 cursor-not-allowed text-sm flex items-center justify-center"; 
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> اعتبارسنجی...';
+            btn.className = "w-full bg-slate-800 text-white font-black rounded-2xl p-4 cursor-not-allowed flex items-center justify-center mt-4"; 
             btn.disabled = true;
             
             try {
                 const { error } = await supaClient.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                showToast('هویت تایید شد', 'success');
+                showToast('با موفقیت وارد شدید', 'success');
             } catch (err) {
-                showToast('ایمیل یا رمز اشتباه است یا کاربر وجود ندارد', 'error');
+                showToast('ایمیل یا رمز اشتباه است', 'error');
             } finally {
-                btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
-                btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
+                btn.innerHTML = 'ورود به محیط کاربری <i class="fa-solid fa-arrow-left ml-2"></i>';
+                btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 mt-4";
                 btn.disabled = false;
             }
         }
@@ -737,29 +803,34 @@
             document.getElementById('main-dashboard').classList.add('hidden'); document.getElementById('main-dashboard').classList.remove('flex');
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('password').value = ''; currentUser = null;
-            
             if(pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
-
+            
             const btn = document.getElementById('login-btn');
-            btn.innerHTML = 'ورود امن به پرتال <i class="fa-solid fa-arrow-left mr-2"></i>';
-            btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 cursor-pointer text-sm";
+            btn.innerHTML = 'ورود به محیط کاربری <i class="fa-solid fa-arrow-left ml-2"></i>';
+            btn.className = "w-full bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl p-4 transition-all duration-300 flex items-center justify-center shadow-lg shadow-teal-200 mt-4";
             btn.disabled = false;
         }
 
+        // Initialize App
         function initDashboard() {
             document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex');
             document.getElementById('main-dashboard').classList.remove('hidden'); document.getElementById('main-dashboard').classList.add('flex');
             
             document.getElementById('user-display-name').innerText = getCurrentUserName();
+            document.getElementById('user-name-mobile').innerText = getCurrentUserName();
             document.getElementById('user-role-display').innerText = isAdmin() ? 'مدیریت کل سیستم' : 'عضو تیم قنات';
             document.getElementById('user-avatar-initial').innerText = getInitials(getCurrentUserName());
 
             if(!isAdmin()) {
                 document.getElementById('tab-btn-archive').style.display = 'none'; 
                 document.getElementById('admin-menu-header').style.display = 'none';
+                document.getElementById('mob-btn-archive').classList.add('hidden');
+                document.getElementById('mob-btn-archive').classList.remove('flex');
             } else {
                 document.getElementById('tab-btn-archive').style.display = 'flex'; 
                 document.getElementById('admin-menu-header').style.display = 'block';
+                document.getElementById('mob-btn-archive').classList.remove('hidden');
+                document.getElementById('mob-btn-archive').classList.add('flex');
             }
             
             const today = JalaliUtils.getToday();
@@ -770,46 +841,14 @@
             fetchMeetings();
 
             if(!pollingInterval) {
-                pollingInterval = setInterval(() => {
-                    if (currentUser && document.visibilityState === 'visible') {
-                        fetchTasks(true); 
-                    }
-                }, 10000); 
-            }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('[id^="view-"]').forEach(el => { el.classList.add('hidden'); el.classList.remove('flex'); });
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            
-            const view = document.getElementById('view-' + tabId);
-            if(view) {
-                view.classList.remove('hidden');
-                if (tabId === 'taskcalendar' || tabId === 'tracking' || tabId === 'archive' || tabId === 'performance') view.classList.add('flex');
-                else view.classList.add('block');
+                pollingInterval = setInterval(() => { if (currentUser && document.visibilityState === 'visible') fetchTasks(true); }, 10000); 
             }
             
-            const btn = document.getElementById('tab-btn-' + tabId);
-            if(btn) btn.classList.add('active');
-            
-            const titles = {
-                'kanban': 'بورد مدیریت کارهای جاری',
-                'taskcalendar': 'تقویم سررسید وظایف',
-                'tracking': 'پیگیری وضعیت ارجاعات',
-                'calendar': 'تقویم جلسات دوره‌ای',
-                'performance': 'عملکرد و راندمان تیم',
-                'analytics': 'داشبورد تحلیل داده‌ها',
-                'archive': 'پنل تاییدات مدیریت'
-            };
-            document.getElementById('page-title').innerText = titles[tabId] || 'پرتال مدیریت';
-            
-            if(window.innerWidth < 1024) toggleSidebar();
-            if(tabId === 'kanban') renderKanban();
-            if(tabId === 'taskcalendar') renderCalendarView();
-            if(tabId === 'analytics') renderAnalytics();
-            if(tabId === 'performance') generatePerformanceCards();
+            // Set initial mobile Kanban tab
+            if(window.innerWidth < 1024) switchKanbanCol('todo');
         }
 
+        // UI Interactions
         function toggleSidebar() {
             const sidebar = document.getElementById('mainSidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -824,7 +863,79 @@
             }
         }
 
-        // --- Fetch & Filters ---
+        function switchTab(tabId) {
+            // Hide all
+            document.querySelectorAll('[id^="view-"]').forEach(el => { el.classList.add('hidden'); el.classList.remove('flex', 'block'); });
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Show Target
+            const view = document.getElementById('view-' + tabId);
+            if(view) {
+                view.classList.remove('hidden');
+                if (tabId === 'kanban' || tabId === 'analytics') view.classList.add('block');
+                else view.classList.add('flex');
+            }
+            
+            // Activate buttons
+            const sBtn = document.getElementById('tab-btn-' + tabId); if(sBtn) sBtn.classList.add('active');
+            const mBtn = document.getElementById('mob-btn-' + tabId); if(mBtn) mBtn.classList.add('active');
+            
+            const titles = { 'kanban': 'بورد وظایف', 'taskcalendar': 'تقویم وظایف', 'tracking': 'پیگیری ارجاعات', 'calendar': 'تقویم جلسات', 'performance': 'عملکرد تیم', 'analytics': 'داشبورد تحلیل', 'archive': 'تاییدات مدیر' };
+            document.getElementById('page-title-desktop').innerText = titles[tabId] || 'پرتال مدیریت';
+            document.getElementById('page-title-mobile').innerText = titles[tabId] || 'پرتال مدیریت';
+            
+            if(window.innerWidth < 1024 && document.getElementById('mainSidebar').classList.contains('translate-x-full') === false) toggleSidebar();
+            
+            if(tabId === 'kanban') renderKanban();
+            if(tabId === 'taskcalendar') renderCalendarView();
+            if(tabId === 'analytics') renderAnalytics();
+            if(tabId === 'performance') generatePerformanceCards();
+        }
+
+        // Mobile Kanban Tab Switcher
+        function switchKanbanCol(colId) {
+            // Only affects mobile UI
+            if(window.innerWidth >= 1024) return;
+            
+            ['todo', 'inprogress', 'done'].forEach(id => {
+                document.getElementById('wrapper-' + id).classList.add('hidden');
+                document.getElementById('wrapper-' + id).classList.remove('flex');
+                document.getElementById('btn-col-' + id).classList.remove('active');
+            });
+            
+            document.getElementById('wrapper-' + colId).classList.remove('hidden');
+            document.getElementById('wrapper-' + colId).classList.add('flex');
+            document.getElementById('btn-col-' + colId).classList.add('active');
+        }
+
+        // Toast & Confirm
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-message');
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            toast.className = 'fixed top-6 w-[90vw] max-w-sm left-1/2 transform -translate-x-1/2 px-5 py-4 rounded-2xl shadow-2xl z-[2000] text-sm font-black transition-all duration-400 opacity-100 translate-y-0 text-white border border-white/20 glass-panel flex items-center gap-3 ';
+            
+            if(type === 'error') { toast.classList.add('bg-rose-600/90'); icon = '<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>'; }
+            else if (type === 'success') { toast.classList.add('bg-emerald-600/90'); icon = '<div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-check"></i></div>'; }
+            else { toast.classList.add('bg-teal-800/90'); }
+            
+            toast.innerHTML = icon + ' ' + message;
+            setTimeout(() => { toast.classList.replace('opacity-100', 'opacity-0'); toast.classList.replace('translate-y-0', 'translate-y-[-2rem]'); }, 4000);
+        }
+
+        function showConfirm(title, message, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+            document.getElementById('custom-confirm-modal').classList.add('flex');
+            confirmCallback = callback;
+        }
+        function closeConfirm() {
+            document.getElementById('custom-confirm-modal').classList.add('hidden'); document.getElementById('custom-confirm-modal').classList.remove('flex'); confirmCallback = null;
+        }
+        function executeConfirm() { if (confirmCallback) confirmCallback(); closeConfirm(); }
+
+        // Data Fetch & Filters
         let lastDataHash = '';
         async function fetchTasks(isSilent = false) {
             if(!supaClient) return;
@@ -833,14 +944,8 @@
                 if (error) throw error;
                 
                 const newHash = JSON.stringify(data);
-                if(newHash !== lastDataHash) {
-                    allTasksList = data || [];
-                    lastDataHash = newHash;
-                    filterTasks(); 
-                }
-            } catch (err) { 
-                if(!isSilent) showToast('خطا در دریافت وظایف', 'error'); 
-            }
+                if(newHash !== lastDataHash) { allTasksList = data || []; lastDataHash = newHash; filterTasks(); }
+            } catch (err) { if(!isSilent) showToast('خطا در دریافت وظایف', 'error'); }
         }
 
         function filterTasks() {
@@ -851,118 +956,28 @@
                 const pendingDeletions = allTasksList.filter(t => t.is_archived === true || t.is_archived === 'true').length;
                 const totalPending = pendingApprovals + pendingDeletions;
                 
-                const badge = document.getElementById('admin-badge');
-                if (badge) {
-                    if (totalPending > 0) {
-                        badge.innerText = totalPending;
-                        badge.classList.remove('hidden');
-                    } else {
-                        badge.classList.add('hidden');
+                ['admin-badge', 'admin-badge-mob'].forEach(id => {
+                    const badge = document.getElementById(id);
+                    if (badge) {
+                        if (totalPending > 0) { badge.innerText = totalPending; badge.classList.remove('hidden'); } 
+                        else { badge.classList.add('hidden'); }
                     }
-                }
+                });
             }
 
             const baseActive = allTasksList.filter(t => t.is_archived !== true && t.is_archived !== 'true');
-            let visibleTasks = [];
-
-            if (isAdmin()) {
-                visibleTasks = baseActive.filter(t => t.is_approved === true || t.is_approved === 'true'); 
-            } else {
-                const myName = getCurrentUserName();
-                visibleTasks = baseActive.filter(t => 
-                    (t.assigned_to === myName && (t.is_approved === true || t.is_approved === 'true'))
-                );
-            }
+            let visibleTasks = isAdmin() ? baseActive.filter(t => t.is_approved === true || t.is_approved === 'true') : baseActive.filter(t => (t.assigned_to === getCurrentUserName() && (t.is_approved === true || t.is_approved === 'true')));
             
-            if (!query) {
-                activeTasksList = [...visibleTasks];
-            } else {
-                activeTasksList = visibleTasks.filter(t => 
-                    t.title.toLowerCase().includes(query) || 
-                    (t.description && t.description.toLowerCase().includes(query)) ||
-                    (t.assigned_to && t.assigned_to.toLowerCase().includes(query))
-                );
-            }
+            activeTasksList = query ? visibleTasks.filter(t => t.title.toLowerCase().includes(query) || (t.description && t.description.toLowerCase().includes(query)) || (t.assigned_to && t.assigned_to.toLowerCase().includes(query))) : [...visibleTasks];
             
-            renderKanban();
-            renderCalendarView();
-            generatePerformanceCards();
-            renderAnalytics();
-            renderTracking();
-            if (isAdmin()) { renderArchive(); }
+            renderKanban(); renderCalendarView(); generatePerformanceCards(); renderAnalytics(); renderTracking(); if (isAdmin()) renderArchive();
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast-message');
-            let icon = '<i class="fa-solid fa-circle-info"></i>';
-            toast.className = 'fixed top-5 w-[90vw] max-w-sm left-1/2 transform -translate-x-1/2 px-4 sm:px-6 py-3.5 rounded-xl shadow-2xl z-[300] text-sm font-black transition-all duration-300 opacity-100 translate-y-0 text-white flex items-center gap-2 ';
-            
-            if(type === 'error') {
-                toast.className += 'bg-rose-600 border-2 border-rose-800';
-                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            } else if (type === 'success') {
-                toast.className += 'bg-emerald-600 border-2 border-emerald-800';
-                icon = '<i class="fa-solid fa-circle-check"></i>';
-            } else {
-                toast.className += 'bg-teal-800 border-2 border-teal-950';
-            }
-            toast.innerHTML = icon + ' ' + message;
-            setTimeout(() => {
-                toast.classList.replace('opacity-100', 'opacity-0');
-                toast.classList.replace('translate-y-0', 'translate-y-[-2rem]');
-            }, 4000);
-        }
-
-        // --- View Renders ---
-        function renderTracking() {
-            const tbody = document.getElementById('tracking-table-body');
-            if(!tbody || !currentUser) return;
-            tbody.innerHTML = '';
-            
-            const myName = getCurrentUserName();
-            const myEmail = currentUser.email.toLowerCase();
-            
-            const trackingTasks = allTasksList.filter(t => 
-                t.creator_email === myEmail && 
-                t.assigned_to !== myName && 
-                t.is_archived !== true && t.is_archived !== 'true'
-            );
-            
-            if(trackingTasks.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold">شما تا به حال هیچ وظیفه‌ای برای ارجاع به دیگران ثبت نکرده‌اید.</td></tr>`;
-                return;
-            }
-
-            trackingTasks.forEach(t => {
-                let approvalBadge = (t.is_approved === true || t.is_approved === 'true') 
-                    ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-[10px] font-black"><i class="fa-solid fa-check mr-1"></i> تایید شده</span>' 
-                    : '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-black"><i class="fa-solid fa-hourglass-half animate-pulse mr-1"></i> منتظر تایید</span>';
-                
-                let statusText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در دست اقدام');
-                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50 border border-sky-100' : (statusText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50 border border-emerald-100' : 'text-amber-600 bg-amber-50 border border-amber-100');
-                let assigneeStr = t.assigned_to && t.assigned_to !== 'تخصیص نیافته' ? t.assigned_to : 'آزاد (بدون مسئول)';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0 cursor-pointer" onclick="openTaskModal('${t.id}')">
-                        <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
-                        <td class="p-4 font-bold text-slate-600 text-xs text-center">${assigneeStr}</td>
-                        <td class="p-4 text-center">${approvalBadge}</td>
-                        <td class="p-4 text-center"><span class="px-2 py-1.5 rounded text-[10px] font-black ${sColor}">${statusText}</span></td>
-                        <td class="p-4 text-center text-xs font-black text-slate-500" dir="ltr">${t.progress || 0} %</td>
-                    </tr>
-                `;
-            });
-        }
-
+        // Render Views
         function renderKanban() {
             const cols = { 'todo': document.getElementById('col-todo'), 'in_progress': document.getElementById('col-inprogress'), 'done': document.getElementById('col-done') };
             cols.todo.innerHTML = ''; cols.in_progress.innerHTML = ''; cols.done.innerHTML = '';
             let counts = { todo: 0, in_progress: 0, done: 0 };
-
-            if(activeTasksList.length === 0) {
-                const emptyHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-10"><i class="fa-solid fa-ghost text-4xl mb-3"></i><span class="text-xs font-bold">وظیفه‌ای یافت نشد</span></div>`;
-                cols.todo.innerHTML = emptyHTML; cols.in_progress.innerHTML = emptyHTML; cols.done.innerHTML = emptyHTML;
-            }
 
             activeTasksList.forEach(task => {
                 let s = 'todo'; if(task.status === 'در دست اقدام' || task.status === 'in_progress') s = 'in_progress'; if(task.status === 'انجام شده' || task.status === 'done') s = 'done';
@@ -972,611 +987,296 @@
                 if(task.priority === 'مهم') pConfig = { bg: 'bg-amber-50 text-amber-700 border-amber-200', icon: 'fa-circle-exclamation' };
                 if(task.priority === 'فوری' || task.priority === '🔴 فوری و حیاتی') pConfig = { bg: 'bg-rose-50 text-rose-700 border-rose-200', icon: 'fa-fire' };
 
-                let overdueClass = ''; let dueIconColor = 'text-slate-500';
-                if(task.due_date && s !== 'done' && isOverdue(task.due_date)) {
-                    overdueClass = 'bg-rose-50 border-rose-200 shadow-rose-100 border-r-4 border-r-rose-500'; dueIconColor = 'text-rose-600 animate-pulse';
-                }
+                let overdueClass = ''; let dueIconColor = 'text-slate-400';
+                if(task.due_date && s !== 'done' && isOverdue(task.due_date)) { overdueClass = 'bg-rose-50 border-rose-200 shadow-rose-100 border-r-4 border-r-rose-500'; dueIconColor = 'text-rose-600 animate-pulse'; }
                 
                 let assigneeStr = task.assigned_to && task.assigned_to !== 'تخصیص نیافته' ? task.assigned_to : 'بدون مسئول';
-                let assigneeColor = assigneeStr === 'بدون مسئول' ? 'bg-slate-200 text-slate-500' : 'bg-teal-100 text-teal-800 border border-teal-200';
-
-                let progress = task.progress || 0;
-                let progColor = progress === 100 ? 'bg-emerald-500' : 'bg-teal-500';
+                let assigneeColor = assigneeStr === 'بدون مسئول' ? 'bg-slate-100 text-slate-400' : 'bg-teal-100 text-teal-700 border border-teal-200';
+                let progress = task.progress || 0; let progColor = progress === 100 ? 'bg-emerald-500' : 'bg-teal-500';
 
                 let isPending = (task.is_approved === false || task.is_approved === 'false');
-                let myName = getCurrentUserName();
-                let isReadOnly = !isAdmin() && (task.assigned_to !== myName || isPending); 
-                
-                let pendingBadge = isPending ? `<div class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-300 flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر</div>` : '';
-                let dragClass = isReadOnly ? '' : 'draggable';
-                let draggable = !isReadOnly;
+                let isReadOnly = !isAdmin() && (task.assigned_to !== getCurrentUserName() || isPending); 
+                let dragClass = isReadOnly ? '' : 'draggable'; let draggable = !isReadOnly;
 
                 let actionButtonsHTML = !isReadOnly ? `
-                    <div class="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
-                        <button onclick="openTaskModal('${task.id}')" class="text-indigo-500 hover:bg-indigo-50 w-7 h-7 rounded flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="ویرایش"><i class="fa-solid fa-pen text-[10px]"></i></button>
-                        <button onclick="softDeleteTask('${task.id}')" class="text-rose-500 hover:bg-rose-50 w-7 h-7 rounded flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="حذف"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                    <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                        <button onclick="openTaskModal('${task.id}')" class="text-indigo-500 hover:bg-indigo-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="ویرایش"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                        <button onclick="softDeleteTask('${task.id}')" class="text-rose-500 hover:bg-rose-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="حذف"><i class="fa-solid fa-trash text-[11px]"></i></button>
                     </div>
-                ` : `
-                    <div class="flex items-center gap-1">
-                        <span class="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200"><i class="fa-solid fa-eye ml-1"></i> فقط مشاهده</span>
-                    </div>
-                `;
+                ` : `<span class="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200"><i class="fa-solid fa-eye ml-1"></i> فقط مشاهده</span>`;
 
                 const cardHTML = `
-                    <div id="${task.id}" class="task-card bg-white p-4 rounded-2xl border ${overdueClass ? overdueClass : 'border-slate-200 border-r-4 border-r-slate-400'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggable}" ondragstart="${draggable ? 'drag(event)' : ''}">
-                        ${pendingBadge}
-                        <div class="flex justify-between items-start mb-2 gap-2">
-                            <span class="text-[9px] shrink-0 font-black px-2 py-1 rounded-md border ${pConfig.bg} flex items-center gap-1"><i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}</span>
+                    <div id="${task.id}" class="task-card bg-white p-4 lg:p-5 rounded-[1.25rem] border ${overdueClass ? overdueClass : 'border-slate-100 border-r-4 border-r-slate-300'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggable}" ondragstart="${draggable ? 'drag(event)' : ''}" onclick="${draggable && window.innerWidth < 1024 ? `openTaskModal('${task.id}')` : ''}">
+                        ${isPending ? `<div class="bg-amber-50 text-amber-700 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-200 flex items-center justify-center gap-1"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر</div>` : ''}
+                        <div class="flex justify-between items-start mb-3 gap-2">
+                            <span class="text-[10px] shrink-0 font-black px-2 py-1 rounded-md border ${pConfig.bg} flex items-center gap-1"><i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}</span>
                             ${actionButtonsHTML}
                         </div>
-                        
-                        <h4 class="font-black text-slate-800 text-sm leading-relaxed mb-1 break-words">${task.title}</h4>
-                        
-                        <div class="mt-3">
-                            <div class="flex justify-between text-[9px] font-black text-slate-500 mb-1"><span>پیشرفت</span><span>${progress}%</span></div>
+                        <h4 class="font-black text-slate-800 text-[13px] leading-relaxed mb-2 pr-1">${task.title}</h4>
+                        <div class="mt-4">
+                            <div class="flex justify-between text-[9px] font-black text-slate-400 mb-1.5"><span>درصد انجام</span><span>${progress}%</span></div>
                             <div class="w-full bg-slate-100 rounded-full h-1.5"><div class="${progColor} h-1.5 rounded-full" style="width: ${progress}%"></div></div>
                         </div>
-                        
-                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                            <div class="flex items-center gap-1.5" title="مسئول: ${assigneeStr}">
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black ${assigneeColor}">${getInitials(assigneeStr)}</div>
+                        <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black ${assigneeColor}">${getInitials(assigneeStr)}</div>
                                 <span class="text-[10px] font-bold text-slate-600 truncate max-w-[70px]">${assigneeStr.split(' ')[0]}</span>
                             </div>
-                            ${task.due_date ? `<div class="text-[9px] font-black ${overdueClass ? 'text-rose-700' : 'text-slate-500'} flex items-center gap-1"><i class="fa-regular fa-calendar ${dueIconColor}"></i> ${normalizeJalaliDate(task.due_date)}</div>` : ''}
+                            ${task.due_date ? `<div class="text-[10px] font-black ${overdueClass ? 'text-rose-600' : 'text-slate-400'} flex items-center gap-1"><i class="fa-regular fa-calendar ${dueIconColor}"></i> ${normalizeJalaliDate(task.due_date)}</div>` : ''}
                         </div>
                     </div>
                 `;
-                if(cols[s].innerHTML.includes('fa-ghost')) cols[s].innerHTML = ''; cols[s].innerHTML += cardHTML;
+                cols[s].innerHTML += cardHTML;
             });
 
+            // Update Counters
             document.getElementById('stat-total').innerText = activeTasksList.length;
-            document.getElementById('stat-todo').innerText = counts.todo; document.getElementById('badge-todo').innerText = counts.todo;
-            document.getElementById('stat-inprogress').innerText = counts.in_progress; document.getElementById('badge-inprogress').innerText = counts.in_progress;
-            document.getElementById('stat-done').innerText = counts.done; document.getElementById('badge-done').innerText = counts.done;
-        }
-
-        // --- Interactive Calendar Logic ---
-        function setCalView(view) {
-            calState.view = view;
-            document.getElementById('cal-btn-month').className = view === 'month' ? 'px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none' : 'px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none';
-            document.getElementById('cal-btn-week').className = view === 'week' ? 'px-4 py-1.5 text-xs font-black rounded-lg transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none' : 'px-4 py-1.5 text-xs font-black rounded-lg transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none';
-            renderCalendarView();
-        }
-
-        function changeCalDate(offset) {
-            if(calState.view === 'month') {
-                calState.month += offset;
-                if(calState.month > 12) { calState.month = 1; calState.year++; }
-                else if(calState.month < 1) { calState.month = 12; calState.year--; }
-            } else {
-                calState.day += offset * 7;
-                while(calState.day > JalaliUtils.daysInMonth(calState.year, calState.month)) {
-                    calState.day -= JalaliUtils.daysInMonth(calState.year, calState.month);
-                    calState.month++;
-                    if(calState.month > 12) { calState.month = 1; calState.year++; }
-                }
-                while(calState.day < 1) {
-                    calState.month--;
-                    if(calState.month < 1) { calState.month = 12; calState.year--; }
-                    calState.day += JalaliUtils.daysInMonth(calState.year, calState.month);
-                }
-            }
-            renderCalendarView();
-        }
-
-        function resetCalToToday() {
-            const t = JalaliUtils.getToday();
-            calState.year = t.y; calState.month = t.m; calState.day = t.d;
-            renderCalendarView();
-        }
-
-        function renderCalendarView() {
-            document.getElementById('cal-header-title').innerText = `${monthNames[calState.month - 1]} ${calState.year}`;
-            const grid = document.getElementById('cal-grid');
-            grid.innerHTML = '';
-
-            const daysInMonth = JalaliUtils.daysInMonth(calState.year, calState.month);
-            let firstDayGregorian = JalaliUtils.toGregorian(calState.year, calState.month, 1);
-            let startWeekDay = (firstDayGregorian.getDay() + 1) % 7;
-
-            let cells = [];
-            for (let i = 0; i < startWeekDay; i++) {
-                cells.push(`<div class="bg-slate-50/50 min-h-[100px] border-b border-l border-slate-100"></div>`);
-            }
-
-            const todayStr = getTodayJalaliStr();
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                let cellDateStr = `${calState.year}/${calState.month.toString().padStart(2,'0')}/${d.toString().padStart(2,'0')}`;
-                let isToday = cellDateStr === todayStr;
-                
-                let dayTasks = activeTasksList.filter(t => normalizeJalaliDate(t.due_date) === cellDateStr);
-                
-                let tasksHtml = '';
-                dayTasks.forEach(t => {
-                    let s = t.status;
-                    let color = 'bg-slate-100 text-slate-700';
-                    if (s === 'done' || s === 'انجام شده') color = 'bg-emerald-100 text-emerald-700';
-                    else if (isOverdue(cellDateStr)) color = 'bg-rose-100 text-rose-700 animate-pulse';
-                    else if (s === 'in_progress' || s === 'در دست اقدام') color = 'bg-amber-100 text-amber-700';
-                    else if (t.priority === 'فوری') color = 'bg-rose-100 text-rose-700';
-                    
-                    let icon = s === 'done' || s === 'انجام شده' ? 'fa-check' : (isOverdue(cellDateStr) ? 'fa-triangle-exclamation' : 'fa-circle-dot');
-
-                    tasksHtml += `<div onclick="event.stopPropagation(); openTaskModal('${t.id}')" class="text-[9px] font-black p-1 rounded mb-1 truncate ${color} border border-white/20 shadow-sm hover:shadow-md transition" title="${t.title}"><i class="fa-solid ${icon} mr-0.5"></i> ${t.title}</div>`;
-                });
-
-                cells.push(`
-                    <div onclick="openTaskModal(null, '${cellDateStr}')" class="cal-cell bg-white border-b border-l border-slate-100 p-1 flex flex-col relative group ${isToday ? 'today' : ''}">
-                        <div class="text-xs font-black text-slate-500 mb-1 w-6 h-6 flex items-center justify-center rounded-full group-hover:bg-teal-100 group-hover:text-teal-700 transition ${isToday ? 'bg-teal-600 text-white' : ''}">${d}</div>
-                        <div class="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pr-1">${tasksHtml}</div>
-                    </div>
-                `);
-            }
-
-            while (cells.length % 7 !== 0) {
-                cells.push(`<div class="bg-slate-50/50 min-h-[100px] border-b border-l border-slate-100"></div>`);
-            }
-
-            if(calState.view === 'week') {
-                let targetIndex = startWeekDay + calState.day - 1;
-                let chunkStart = Math.floor(targetIndex / 7) * 7;
-                cells = cells.slice(chunkStart, chunkStart + 7);
-            }
-
-            grid.innerHTML = cells.join('');
-        }
-
-        // --- Performance ---
-        function generatePerformanceCards() {
-            const container = document.getElementById('team-cards-container');
-            container.innerHTML = '';
+            ['todo', 'inprogress', 'done'].forEach(s => {
+                let statusCount = s === 'todo' ? counts.todo : (s === 'inprogress' ? counts.in_progress : counts.done);
+                document.getElementById('stat-' + s).innerText = statusCount;
+                document.getElementById('badge-' + s).innerText = statusCount;
+                document.getElementById('m-badge-' + s).innerText = statusCount;
+            });
             
-            let users = {};
-            activeTasksList.forEach(t => {
-                let u = t.assigned_to || 'بدون مسئول';
-                if(!users[u]) users[u] = { total: 0, done: 0, ip: 0, overdue: 0, list: [] };
-                users[u].total++;
-                users[u].list.push(t);
-                if(t.status === 'done' || t.status === 'انجام شده') users[u].done++;
-                else {
-                    users[u].ip++;
-                    if(t.due_date && isOverdue(t.due_date)) users[u].overdue++;
-                }
-            });
-
-            if(Object.keys(users).length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold">اطلاعاتی یافت نشد.</div>`; return;
-            }
-
-            Object.keys(users).forEach(u => {
-                let d = users[u];
-                let score = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0;
-                score = Math.max(0, Math.round(score - (d.overdue * 3))); // penalty
-                
-                let color = score > 75 ? 'emerald' : (score > 40 ? 'amber' : 'rose');
-                let initials = getInitials(u);
-
-                container.innerHTML += `
-                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition cursor-pointer flex flex-col" onclick="showUserTasks('${u}')">
-                        <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-                            <div class="w-10 h-10 rounded-xl bg-${color}-100 text-${color}-700 flex items-center justify-center text-base font-black shrink-0">${initials}</div>
-                            <div class="min-w-0">
-                                <h4 class="font-black text-slate-800 text-xs sm:text-sm truncate">${u.split(' ')[0]}</h4>
-                                <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 mt-0.5">راندمان: <span class="text-${color}-600 font-black">${score}%</span></p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold">
-                            <div class="bg-slate-50 py-1.5 rounded-lg text-slate-600"><div class="text-xs font-black">${d.total}</div>کل</div>
-                            <div class="bg-emerald-50 py-1.5 rounded-lg text-emerald-700"><div class="text-xs font-black">${d.done}</div>تکمیل</div>
-                            <div class="bg-rose-50 py-1.5 rounded-lg text-rose-700"><div class="text-xs font-black">${d.overdue}</div>تاخیر</div>
-                        </div>
-                    </div>
-                `;
+            // Empty States
+            ['todo', 'in_progress', 'done'].forEach(s => {
+                if(cols[s].innerHTML === '') cols[s].innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-300 py-12"><i class="fa-solid fa-ghost text-4xl mb-4"></i><span class="text-xs font-bold">موردی یافت نشد</span></div>`;
             });
         }
 
-        function showUserTasks(username) {
-            const section = document.getElementById('member-detail-section');
-            document.getElementById('detail-member-name').innerText = `وظایف: ${username}`;
-            const tbody = document.getElementById('detail-member-tasks');
-            tbody.innerHTML = '';
-            
-            const userTasks = activeTasksList.filter(t => (t.assigned_to || 'بدون مسئول') === username);
-            userTasks.forEach(t => {
-                let statusText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در جریان');
-                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50' : (statusText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50');
-                
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 cursor-pointer border-b border-slate-50" onclick="openTaskModal('${t.id}')">
-                        <td class="p-3 font-bold text-slate-700 text-xs truncate max-w-[150px]">${t.title}</td>
-                        <td class="p-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-black ${sColor}">${statusText}</span></td>
-                        <td class="p-3 text-center text-xs font-black text-slate-500">${t.progress || 0}%</td>
-                        <td class="p-3 text-center text-xs font-black ${isOverdue(t.due_date) && statusText !== 'پایان یافته' ? 'text-rose-600' : 'text-slate-500'}" dir="ltr">${normalizeJalaliDate(t.due_date) || '-'}</td>
-                    </tr>
-                `;
-            });
-            section.classList.remove('hidden');
-            section.classList.add('flex');
-            setTimeout(() => { section.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100);
-        }
-
-        function renderAnalytics() {
-            if (chartInstances['status']) chartInstances['status'].destroy();
-            if (chartInstances['workload']) chartInstances['workload'].destroy();
-
-            let sTodo=0, sIp=0, sDone=0;
-            activeTasksList.forEach(t => {
-                if(t.status === 'todo') sTodo++;
-                else if(t.status === 'done' || t.status === 'انجام شده') sDone++;
-                else sIp++;
-            });
-
-            const ctxStatus = document.getElementById('statusChart').getContext('2d');
-            chartInstances['status'] = new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: ['برای انجام', 'در جریان', 'پایان یافته'],
-                    datasets: [{ data: [sTodo, sIp, sDone], backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn' }, boxWidth: 12 } } } }
-            });
-
-            let users = {};
-            activeTasksList.forEach(t => {
-                let u = (t.assigned_to || 'آزاد').split(' ')[0];
-                users[u] = (users[u] || 0) + 1;
-            });
-            const uLabels = Object.keys(users); const uData = Object.values(users);
-
-            const ctxWorkload = document.getElementById('workloadChart').getContext('2d');
-            chartInstances['workload'] = new Chart(ctxWorkload, {
-                type: 'bar',
-                data: {
-                    labels: uLabels,
-                    datasets: [{ label: 'تعداد وظایف', data: uData, backgroundColor: '#0d9488', borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Vazirmatn', size: 10 } } } } }
-            });
-        }
-
-        // --- Modals & Data Modifiers ---
+        // Modals & Tasks
         function openTaskModal(taskId = null, defaultDateStr = null) {
             const form = document.getElementById('taskForm');
             form.reset();
-            document.getElementById('progressVal').innerText = '0%';
-            document.getElementById('taskProgress').value = 0;
-            
-            const submitBtn = document.getElementById('btn-submit-task');
-            if (submitBtn) submitBtn.style.display = 'flex';
+            document.getElementById('progressVal').innerText = '0%'; document.getElementById('taskProgress').value = 0;
+            const submitBtn = document.getElementById('btn-submit-task'); if (submitBtn) submitBtn.style.display = 'flex';
             
             if(taskId) {
                 const task = allTasksList.find(t => t.id === taskId);
                 if(task) {
-                    document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 ml-2"></i>ویرایش وظیفه';
+                    document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-500 ml-2"></i> ویرایش وظیفه';
                     document.getElementById('btn-submit-text').innerText = 'بروزرسانی تغییرات';
                     
-                    let myName = getCurrentUserName();
-                    let isReadOnlyTracking = !isAdmin() && task.creator_email === (currentUser ? currentUser.email.toLowerCase() : '') && task.assigned_to !== myName;
-                    if (isReadOnlyTracking) {
-                        document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-eye text-teal-600 ml-2"></i>مشاهده وضعیت وظیفه';
+                    if (!isAdmin() && task.creator_email === currentUser?.email.toLowerCase() && task.assigned_to !== getCurrentUserName()) {
+                        document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-eye text-teal-500 ml-2"></i> مشاهده جزئیات';
                         if (submitBtn) submitBtn.style.display = 'none';
                     }
                     
                     document.getElementById('taskIdHidden').value = task.id;
-                    document.getElementById('taskStatusHidden').value = task.status;
-                    document.getElementById('taskTitle').value = task.title;
-                    document.getElementById('taskDesc').value = task.description || '';
-                    document.getElementById('taskObstacles').value = task.obstacles || '';
-                    document.getElementById('taskCategory').value = task.category || 'مالی و حسابداری';
-                    document.getElementById('taskPriority').value = task.priority || 'عادی';
-                    document.getElementById('taskAssignee').value = task.assigned_to || 'تخصیص نیافته';
-                    document.getElementById('taskDueDate').value = normalizeJalaliDate(task.due_date) || '';
-                    document.getElementById('taskProgress').value = task.progress || 0;
-                    document.getElementById('progressVal').innerText = (task.progress || 0) + '%';
+                    document.getElementById('taskStatusHidden').value = task.status || 'todo';
+                    document.getElementById('taskTitle').value = task.title; document.getElementById('taskDesc').value = task.description || ''; document.getElementById('taskObstacles').value = task.obstacles || '';
+                    document.getElementById('taskCategory').value = task.category || 'مالی و حسابداری'; document.getElementById('taskPriority').value = task.priority || 'عادی';
+                    document.getElementById('taskAssignee').value = task.assigned_to || 'تخصیص نیافته'; document.getElementById('taskDueDate').value = normalizeJalaliDate(task.due_date) || '';
+                    document.getElementById('taskProgress').value = task.progress || 0; document.getElementById('progressVal').innerText = (task.progress || 0) + '%';
                 }
             } else {
-                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-file-signature text-teal-600 ml-2"></i>ثبت وظیفه جدید';
-                document.getElementById('btn-submit-text').innerText = 'ثبت در سیستم';
-                document.getElementById('taskIdHidden').value = '';
-                document.getElementById('taskStatusHidden').value = 'todo';
+                document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-file-signature text-teal-500 ml-2"></i> تعریف وظیفه جدید';
+                document.getElementById('btn-submit-text').innerText = 'ثبت نهایی';
+                document.getElementById('taskIdHidden').value = ''; document.getElementById('taskStatusHidden').value = 'todo';
                 document.getElementById('taskAssignee').value = getCurrentUserName();
-                if(defaultDateStr) {
-                    document.getElementById('taskDueDate').value = defaultDateStr;
-                }
+                if(defaultDateStr) document.getElementById('taskDueDate').value = defaultDateStr;
             }
 
-            document.getElementById('taskModal').classList.remove('hidden');
-            document.getElementById('taskModal').classList.add('flex');
+            document.getElementById('taskModal').classList.remove('hidden'); document.getElementById('taskModal').classList.add('flex');
         }
         
-        function closeTaskModal() {
-            document.getElementById('taskModal').classList.add('hidden');
-            document.getElementById('taskModal').classList.remove('flex');
-        }
+        function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); document.getElementById('taskModal').classList.remove('flex'); }
 
         async function submitTask() {
-            const btn = document.getElementById('btn-submit-task');
-            if(!btn) return;
-            
+            const btn = document.getElementById('btn-submit-task'); if(!btn) return;
             const originalText = document.getElementById('btn-submit-text').innerText;
             const id = document.getElementById('taskIdHidden').value;
             const assignee = document.getElementById('taskAssignee').value;
             const myName = getCurrentUserName();
             
-            let isApproved = true;
-            let successMessage = 'وظیفه با موفقیت ثبت شد';
-
-            if (isAdmin()) {
-                isApproved = true; 
-            } else if (assignee !== myName) {
-                isApproved = false; 
-                successMessage = 'درخواست ارجاع کار برای تایید مدیر ارسال شد';
-            }
+            let isApproved = true; let successMessage = 'وظیفه با موفقیت روی بورد قرار گرفت';
+            if (!isAdmin() && assignee !== myName) { isApproved = false; successMessage = 'ارجاع کار ثبت شد و منتظر تایید مدیر است'; }
 
             const taskData = {
-                title: document.getElementById('taskTitle').value,
-                description: document.getElementById('taskDesc').value,
-                obstacles: document.getElementById('taskObstacles').value,
-                category: document.getElementById('taskCategory').value,
-                priority: document.getElementById('taskPriority').value,
-                assigned_to: assignee,
-                due_date: normalizeJalaliDate(document.getElementById('taskDueDate').value) || null,
-                progress: parseInt(document.getElementById('taskProgress').value),
-                creator_email: currentUser.email.toLowerCase()
+                title: document.getElementById('taskTitle').value, description: document.getElementById('taskDesc').value, obstacles: document.getElementById('taskObstacles').value,
+                category: document.getElementById('taskCategory').value, priority: document.getElementById('taskPriority').value, assigned_to: assignee,
+                due_date: normalizeJalaliDate(document.getElementById('taskDueDate').value) || null, progress: parseInt(document.getElementById('taskProgress').value),
+                status: document.getElementById('taskStatusHidden').value, creator_email: currentUser.email.toLowerCase()
             };
             
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> پردازش...'; 
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> در حال پردازش...'; btn.disabled = true;
 
             try {
                 if (id) {
-                    if (isAdmin()) { taskData.is_approved = true; } 
-                    else if (assignee !== myName && taskData.creator_email === currentUser.email.toLowerCase()) { taskData.is_approved = false; }
+                    if (isAdmin()) taskData.is_approved = true; 
+                    else if (assignee !== myName && taskData.creator_email === currentUser.email.toLowerCase()) taskData.is_approved = false;
                     
-                    const { error } = await supaClient.from('tasks').update(taskData).eq('id', id);
-                    if (error) throw error;
-                    showToast('تغییرات ذخیره و اعمال شد', 'success');
+                    const { error } = await supaClient.from('tasks').update(taskData).eq('id', id); if (error) throw error; showToast('تغییرات شما ذخیره شد', 'success');
                 } else {
-                    taskData.status = 'todo'; 
-                    taskData.is_archived = false;
-                    taskData.is_approved = isApproved;
-                    
-                    const { error } = await supaClient.from('tasks').insert([taskData]);
-                    if (error) throw error;
-                    showToast(successMessage, isApproved ? 'success' : 'info');
+                    taskData.is_archived = false; taskData.is_approved = isApproved;
+                    const { error } = await supaClient.from('tasks').insert([taskData]); if (error) throw error; showToast(successMessage, isApproved ? 'success' : 'info');
                 }
-                closeTaskModal(); 
-                await fetchTasks(true);
-            } catch (err) {
-                showToast('خطا در ارتباط با دیتابیس', 'error');
-            } finally {
-                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">${originalText}</span>`; 
-                btn.disabled = false;
+                closeTaskModal(); await fetchTasks(true);
+            } catch (err) { showToast('خطا در ذخیره‌سازی اطلاعات', 'error'); } 
+            finally { btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">${originalText}</span>`; btn.disabled = false; }
+        }
+
+        // Drag & Drop
+        let draggedTaskId = null;
+        function drag(ev) {
+            const taskId = ev.target.closest('.task-card').id;
+            const taskObj = allTasksList.find(t => t.id === taskId);
+            if (!isAdmin() && taskObj && (taskObj.assigned_to !== getCurrentUserName() || taskObj.is_approved === false || taskObj.is_approved === 'false')) { ev.preventDefault(); return; }
+            draggedTaskId = taskId; ev.dataTransfer.setData("text", draggedTaskId); setTimeout(() => { ev.target.closest('.task-card').classList.add('dragging'); }, 0);
+        }
+        function allowDrop(ev) { ev.preventDefault(); }
+        function dragEnter(ev) { ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(col) col.classList.add('drag-over'); }
+        function dragLeave(ev) { let col = ev.target.closest('.kanban-col'); if(col) col.classList.remove('drag-over'); }
+        async function drop(ev) {
+            ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(!col) return;
+            col.classList.remove('drag-over'); const taskId = ev.dataTransfer.getData("text") || draggedTaskId; if(!taskId) return;
+            const draggedElement = document.getElementById(taskId); if(draggedElement) draggedElement.classList.remove('dragging');
+            const newStatus = col.getAttribute('data-status'); const taskObj = allTasksList.find(t => t.id === taskId);
+            
+            if(taskObj && taskObj.status !== newStatus) {
+                if (!isAdmin() && taskObj && (taskObj.assigned_to !== getCurrentUserName() || taskObj.is_approved === false || taskObj.is_approved === 'false')) { showToast('دسترسی تغییر وضعیت مسدود است', 'error'); return; }
+                let oldStatus = taskObj.status; taskObj.status = newStatus; filterTasks(); 
+                try { await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId); } catch(err) { taskObj.status = oldStatus; filterTasks(); showToast('خطای سرور در ذخیره وضعیت', 'error'); }
             }
         }
+        document.addEventListener('dragend', (e) => { draggedTaskId = null; if(e.target.classList) e.target.classList.remove('dragging'); document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over')); });
 
-        // --- Custom Confirm Component ---
-        function showConfirm(title, message, callback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-message').innerText = message;
-            document.getElementById('custom-confirm-modal').classList.remove('hidden');
-            document.getElementById('custom-confirm-modal').classList.add('flex');
-            confirmCallback = callback;
+        // Calendar Engine
+        function setCalView(view) {
+            calState.view = view;
+            document.getElementById('cal-btn-month').className = view === 'month' ? 'px-5 py-2 text-xs font-black rounded-xl transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none' : 'px-5 py-2 text-xs font-black rounded-xl transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none';
+            document.getElementById('cal-btn-week').className = view === 'week' ? 'px-5 py-2 text-xs font-black rounded-xl transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none' : 'px-5 py-2 text-xs font-black rounded-xl transition text-slate-500 hover:text-slate-700 flex-1 md:flex-none';
+            renderCalendarView();
+        }
+        function changeCalDate(offset) {
+            if(calState.view === 'month') { calState.month += offset; if(calState.month > 12) { calState.month = 1; calState.year++; } else if(calState.month < 1) { calState.month = 12; calState.year--; } } 
+            else { calState.day += offset * 7; while(calState.day > JalaliUtils.daysInMonth(calState.year, calState.month)) { calState.day -= JalaliUtils.daysInMonth(calState.year, calState.month); calState.month++; if(calState.month > 12) { calState.month = 1; calState.year++; } } while(calState.day < 1) { calState.month--; if(calState.month < 1) { calState.month = 12; calState.year--; } calState.day += JalaliUtils.daysInMonth(calState.year, calState.month); } }
+            renderCalendarView();
+        }
+        function resetCalToToday() { const t = JalaliUtils.getToday(); calState.year = t.y; calState.month = t.m; calState.day = t.d; renderCalendarView(); }
+        function renderCalendarView() {
+            document.getElementById('cal-header-title').innerText = `${monthNames[calState.month - 1]} ${calState.year}`;
+            const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+            const daysInMonth = JalaliUtils.daysInMonth(calState.year, calState.month);
+            let firstDayGregorian = JalaliUtils.toGregorian(calState.year, calState.month, 1);
+            let startWeekDay = (firstDayGregorian.getDay() + 1) % 7;
+            let cells = [];
+            for (let i = 0; i < startWeekDay; i++) cells.push(`<div class="bg-slate-50/50 min-h-[110px] border-b border-l border-slate-100"></div>`);
+            const todayStr = getTodayJalaliStr();
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                let cellDateStr = `${calState.year}/${calState.month.toString().padStart(2,'0')}/${d.toString().padStart(2,'0')}`;
+                let isToday = cellDateStr === todayStr; let dayTasks = activeTasksList.filter(t => normalizeJalaliDate(t.due_date) === cellDateStr); let tasksHtml = '';
+                
+                dayTasks.forEach(t => {
+                    let s = t.status; let color = 'bg-slate-100 text-slate-700';
+                    if (s === 'done' || s === 'انجام شده') color = 'bg-emerald-100 text-emerald-700';
+                    else if (isOverdue(cellDateStr)) color = 'bg-rose-100 text-rose-700 animate-pulse';
+                    else if (s === 'in_progress' || s === 'در دست اقدام') color = 'bg-amber-100 text-amber-700';
+                    else if (t.priority === 'فوری') color = 'bg-rose-100 text-rose-700 border-rose-200 border';
+                    let icon = s === 'done' || s === 'انجام شده' ? 'fa-check' : (isOverdue(cellDateStr) ? 'fa-triangle-exclamation' : 'fa-circle-dot');
+                    tasksHtml += `<div onclick="event.stopPropagation(); openTaskModal('${t.id}')" class="text-[9px] font-black p-1.5 rounded-lg mb-1 truncate ${color} shadow-sm transition hover:scale-[1.02]" title="${t.title}"><i class="fa-solid ${icon} mr-0.5"></i> ${t.title}</div>`;
+                });
+
+                cells.push(`
+                    <div onclick="openTaskModal(null, '${cellDateStr}')" class="cal-cell bg-white border-b border-l border-slate-100 p-1.5 flex flex-col relative group ${isToday ? 'today rounded-xl m-1 shadow-sm' : ''}">
+                        <div class="text-xs font-black text-slate-500 mb-2 w-6 h-6 flex items-center justify-center rounded-full group-hover:bg-teal-50 group-hover:text-teal-600 transition ${isToday ? 'bg-teal-500 text-white' : ''}">${d}</div>
+                        <div class="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">${tasksHtml}</div>
+                    </div>
+                `);
+            }
+            while (cells.length % 7 !== 0) cells.push(`<div class="bg-slate-50/50 min-h-[110px] border-b border-l border-slate-100"></div>`);
+            if(calState.view === 'week') { let targetIndex = startWeekDay + calState.day - 1; let chunkStart = Math.floor(targetIndex / 7) * 7; cells = cells.slice(chunkStart, chunkStart + 7); }
+            grid.innerHTML = cells.join('');
         }
 
-        function closeConfirm() {
-            document.getElementById('custom-confirm-modal').classList.add('hidden');
-            document.getElementById('custom-confirm-modal').classList.remove('flex');
-            confirmCallback = null;
-        }
+        // Tracking, Archive, Stats
+        function renderTracking() {
+            const tbody = document.getElementById('tracking-table-body'); if(!tbody || !currentUser) return; tbody.innerHTML = '';
+            const trackingTasks = allTasksList.filter(t => t.creator_email === currentUser.email.toLowerCase() && t.assigned_to !== getCurrentUserName() && t.is_archived !== true && t.is_archived !== 'true');
+            if(trackingTasks.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-bold">هنوز هیچ وظیفه‌ای برای همکاران ارجاع نداده‌اید.</td></tr>`; return; }
 
-        function executeConfirm() {
-            if (confirmCallback) confirmCallback();
-            closeConfirm();
-        }
-
-        // --- Archives & Admin ---
-        function softDeleteTask(id) {
-            const msg = isAdmin() ? 'آیا از انتقال این وظیفه به سطل زباله مطمئن هستید؟' : 'آیا می‌خواهید درخواست حذف این وظیفه را به مدیر ارسال کنید؟';
-            showConfirm('حذف وظیفه', msg, async () => {
-                try {
-                    await supaClient.from('tasks').update({ is_archived: true }).eq('id', id);
-                    showToast(isAdmin() ? 'به بایگانی منتقل شد' : 'درخواست حذف برای مدیر ارسال شد', 'info');
-                    await fetchTasks(true);
-                } catch (err) { showToast('خطا در انتقال', 'error'); }
+            trackingTasks.forEach(t => {
+                let appBadge = (t.is_approved === true || t.is_approved === 'true') ? '<span class="bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 rounded-lg text-[10px] font-black"><i class="fa-solid fa-check mr-1"></i> تایید شده</span>' : '<span class="bg-amber-50 text-amber-600 border border-amber-100 px-3 py-1 rounded-lg text-[10px] font-black"><i class="fa-solid fa-hourglass-half animate-pulse mr-1"></i> منتظر تایید</span>';
+                let sText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در دست اقدام');
+                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50' : (sText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50');
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-100/50 transition border-b border-slate-50 cursor-pointer" onclick="openTaskModal('${t.id}')">
+                        <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
+                        <td class="p-4 font-bold text-slate-600 text-xs text-center">${t.assigned_to || '-'}</td>
+                        <td class="p-4 text-center">${appBadge}</td>
+                        <td class="p-4 text-center"><span class="px-3 py-1.5 rounded-lg text-[10px] font-black ${sColor}">${sText}</span></td>
+                        <td class="p-4 text-center text-xs font-black text-slate-500" dir="ltr">${t.progress || 0}%</td>
+                    </tr>
+                `;
             });
         }
 
         function renderArchive() {
             if(!isAdmin()) return;
-
-            const pendingTbody = document.getElementById('pending-table-body');
-            pendingTbody.innerHTML = '';
+            const pBody = document.getElementById('pending-table-body'); pBody.innerHTML = '';
             const pending = allTasksList.filter(t => (t.is_approved === false || t.is_approved === 'false') && t.is_archived !== true && t.is_archived !== 'true');
-            
-            if(pending.length === 0) {
-                pendingTbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">درخواستی برای تایید وجود ندارد.</td></tr>`;
-            } else {
-                pending.forEach(t => {
-                    pendingTbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                            <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
-                            <td class="p-4 font-bold text-slate-600 text-xs text-center" dir="ltr">${t.creator_email}</td>
-                            <td class="p-4 font-black text-teal-700 text-xs text-center">${t.assigned_to}</td>
-                            <td class="p-4 text-left pl-6 flex gap-2 justify-end">
-                                <button onclick="openTaskModal('${t.id}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-black transition border border-indigo-200">بررسی</button>
-                                <button onclick="approveTask('${t.id}')" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-black transition shadow-sm border border-emerald-200">تایید</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
+            if(pending.length === 0) pBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold">موردی برای تایید وجود ندارد.</td></tr>`;
+            else pending.forEach(t => { pBody.innerHTML += `<tr class="hover:bg-slate-100/50 transition border-b border-slate-50"><td class="p-4 font-black text-slate-800 text-xs">${t.title}</td><td class="p-4 font-bold text-slate-500 text-[10px] text-center" dir="ltr">${t.creator_email}</td><td class="p-4 font-black text-teal-700 text-xs text-center">${t.assigned_to}</td><td class="p-4 text-left pl-6 flex gap-2 justify-end"><button onclick="openTaskModal('${t.id}')" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-xl text-xs font-black transition">بررسی</button><button onclick="approveTask('${t.id}')" class="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2 rounded-xl text-xs font-black transition shadow-md shadow-teal-200">تایید</button></td></tr>`; });
 
-            const archiveTbody = document.getElementById('archive-table-body');
-            archiveTbody.innerHTML = '';
+            const aBody = document.getElementById('archive-table-body'); aBody.innerHTML = '';
             const archived = allTasksList.filter(t => t.is_archived === true || t.is_archived === 'true');
-            
-            if(archived.length === 0) {
-                archiveTbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">زباله‌دان خالی است.</td></tr>`;
-            } else {
-                archived.forEach(t => {
-                    archiveTbody.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                            <td class="p-4 font-black text-slate-800 text-xs">${t.title}</td>
-                            <td class="p-4 font-bold text-slate-600 text-xs text-center">${t.assigned_to || '-'}</td>
-                            <td class="p-4 font-bold text-slate-500 text-xs text-center" dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</td>
-                            <td class="p-4 text-left pl-6 flex gap-2 justify-end">
-                                <button onclick="restoreTask('${t.id}')" class="bg-teal-50 text-teal-600 hover:bg-teal-100 px-3 py-1.5 rounded-lg text-xs font-black transition">بازگردانی</button>
-                                <button onclick="hardDeleteTask('${t.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-black transition">حذف دائم</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
+            if(archived.length === 0) aBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold">زباله‌دان خالی است.</td></tr>`;
+            else archived.forEach(t => { aBody.innerHTML += `<tr class="hover:bg-slate-100/50 transition border-b border-slate-50"><td class="p-4 font-black text-slate-800 text-xs">${t.title}</td><td class="p-4 font-bold text-slate-600 text-xs text-center">${t.assigned_to || '-'}</td><td class="p-4 font-bold text-slate-400 text-[10px] text-center" dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</td><td class="p-4 text-left pl-6 flex gap-2 justify-end"><button onclick="restoreTask('${t.id}')" class="bg-teal-50 text-teal-600 hover:bg-teal-100 px-4 py-2 rounded-xl text-xs font-black transition">بازگردانی</button><button onclick="hardDeleteTask('${t.id}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-4 py-2 rounded-xl text-xs font-black transition">حذف نهایی</button></td></tr>`; });
         }
 
-        async function approveTask(id) {
-            try {
-                await supaClient.from('tasks').update({ is_approved: true }).eq('id', id);
-                showToast('وظیفه تایید شد و در بورد قرار گرفت', 'success'); 
-                await fetchTasks(true);
-            } catch(e) { showToast('خطا در تایید وظیفه', 'error'); }
-        }
+        async function approveTask(id) { try { await supaClient.from('tasks').update({ is_approved: true }).eq('id', id); showToast('تایید شد', 'success'); await fetchTasks(true); } catch(e) { showToast('خطا', 'error'); } }
+        async function restoreTask(id) { try { await supaClient.from('tasks').update({ is_archived: false }).eq('id', id); showToast('بازگشت به بورد', 'success'); await fetchTasks(true); } catch(e) { showToast('خطا', 'error'); } }
+        function hardDeleteTask(id) { showConfirm('حذف دائمی', 'این کار برای همیشه از دیتابیس پاک می‌شود. ادامه می‌دهید؟', async () => { try { await supaClient.from('tasks').delete().eq('id', id); showToast('حذف شد', 'info'); await fetchTasks(true); } catch(e) { showToast('خطا', 'error'); } }); }
+        function softDeleteTask(id) { const msg = isAdmin() ? 'انتقال به زباله‌دان؟' : 'درخواست حذف به مدیر ارسال شود؟'; showConfirm('حذف وظیفه', msg, async () => { try { await supaClient.from('tasks').update({ is_archived: true }).eq('id', id); showToast(isAdmin() ? 'به بایگانی منتقل شد' : 'درخواست ارسال شد', 'info'); await fetchTasks(true); } catch (err) { showToast('خطا', 'error'); } }); }
 
-        async function restoreTask(id) {
-            try {
-                await supaClient.from('tasks').update({ is_archived: false }).eq('id', id);
-                showToast('به بورد اصلی بازگشت', 'success'); await fetchTasks(true);
-            } catch(e) { showToast('خطا در بازگردانی', 'error'); }
-        }
-
-        function hardDeleteTask(id) {
-            showConfirm('حذف دائمی', 'اخطار: این وظیفه برای همیشه پاک خواهد شد! ادامه می‌دهید؟', async () => {
-                try {
-                    await supaClient.from('tasks').delete().eq('id', id);
-                    showToast('حذف دائم با موفقیت انجام شد', 'info'); 
-                    await fetchTasks(true);
-                } catch(e) { showToast('خطا در حذف از سرور', 'error'); }
+        function generatePerformanceCards() {
+            const container = document.getElementById('team-cards-container'); container.innerHTML = ''; let users = {};
+            activeTasksList.forEach(t => { let u = t.assigned_to || 'بدون مسئول'; if(!users[u]) users[u] = { total: 0, done: 0, ip: 0, overdue: 0, list: [] }; users[u].total++; users[u].list.push(t); if(t.status === 'done' || t.status === 'انجام شده') users[u].done++; else { users[u].ip++; if(t.due_date && isOverdue(t.due_date)) users[u].overdue++; } });
+            if(Object.keys(users).length === 0) { container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-10 font-bold">اطلاعاتی یافت نشد.</div>`; return; }
+            Object.keys(users).forEach(u => {
+                let d = users[u]; let score = d.total > 0 ? Math.round((d.done / d.total) * 100) : 0; score = Math.max(0, Math.round(score - (d.overdue * 3)));
+                let color = score > 75 ? 'emerald' : (score > 40 ? 'amber' : 'rose');
+                container.innerHTML += `<div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 hover:shadow-lg transition cursor-pointer flex flex-col" onclick="showUserTasks('${u}')"><div class="flex items-center gap-4 mb-5 border-b border-slate-50 pb-5"><div class="w-14 h-14 rounded-2xl bg-${color}-50 text-${color}-600 flex items-center justify-center text-xl font-black shrink-0">${getInitials(u)}</div><div class="min-w-0"><h4 class="font-black text-slate-800 text-sm truncate">${u.split(' ')[0]}</h4><p class="text-[10px] font-bold text-slate-400 mt-1">راندمان: <span class="text-${color}-500 text-sm font-black">${score}%</span></p></div></div><div class="grid grid-cols-3 gap-2 text-center text-[10px] font-bold"><div class="bg-slate-50 py-2 rounded-xl text-slate-600"><div class="text-sm font-black">${d.total}</div>کل</div><div class="bg-emerald-50 py-2 rounded-xl text-emerald-600"><div class="text-sm font-black">${d.done}</div>تکمیل</div><div class="bg-rose-50 py-2 rounded-xl text-rose-600"><div class="text-sm font-black">${d.overdue}</div>تاخیر</div></div></div>`;
             });
         }
 
-        // --- Drag and Drop Logic ---
-        let draggedTaskId = null;
-        function drag(ev) {
-            const taskId = ev.target.closest('.task-card').id;
-            const taskObj = allTasksList.find(t => t.id === taskId);
-            let myName = getCurrentUserName();
-            let isReadOnly = !isAdmin() && taskObj && (taskObj.assigned_to !== myName || taskObj.is_approved === false || taskObj.is_approved === 'false');
-
-            if (isReadOnly) {
-                ev.preventDefault(); return; 
-            }
-            draggedTaskId = taskId;
-            ev.dataTransfer.setData("text", draggedTaskId);
-            setTimeout(() => { ev.target.closest('.task-card').classList.add('dragging'); }, 0);
-        }
-        function allowDrop(ev) { ev.preventDefault(); }
-        function dragEnter(ev) { ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(col) col.classList.add('drag-over'); }
-        function dragLeave(ev) { let col = ev.target.closest('.kanban-col'); if(col) col.classList.remove('drag-over'); }
-        
-        async function drop(ev) {
-            ev.preventDefault(); let col = ev.target.closest('.kanban-col'); if(!col) return;
-            col.classList.remove('drag-over');
-            const taskId = ev.dataTransfer.getData("text") || draggedTaskId; if(!taskId) return;
-            const draggedElement = document.getElementById(taskId); if(draggedElement) draggedElement.classList.remove('dragging');
-            const newStatus = col.getAttribute('data-status');
-            const taskObj = allTasksList.find(t => t.id === taskId);
-            
-            if(taskObj && taskObj.status !== newStatus) {
-                let myName = getCurrentUserName();
-                let isReadOnly = !isAdmin() && taskObj && (taskObj.assigned_to !== myName || taskObj.is_approved === false || taskObj.is_approved === 'false');
-                if (isReadOnly) {
-                    showToast('شما اجازه تغییر وضعیت این کار را ندارید.', 'error');
-                    return;
-                }
-
-                let oldStatus = taskObj.status; taskObj.status = newStatus;
-                filterTasks(); 
-                try { await supaClient.from('tasks').update({ status: newStatus }).eq('id', taskId); } 
-                catch(err) { taskObj.status = oldStatus; filterTasks(); showToast('خطا در سرور', 'error'); }
-            }
-        }
-        document.addEventListener('dragend', (e) => {
-            draggedTaskId = null; if(e.target.classList) e.target.classList.remove('dragging');
-            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
-        });
-
-        // --- Meetings & Scheduling ---
-        async function fetchMeetings() {
-            if(!supaClient) return;
-            try {
-                const { data } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true });
-                meetingsList = data || []; renderMeetings();
-            } catch(e) {} 
+        function showUserTasks(username) {
+            const section = document.getElementById('member-detail-section'); document.getElementById('detail-member-name').innerText = `وظایف: ${username}`;
+            const tbody = document.getElementById('detail-member-tasks'); tbody.innerHTML = '';
+            const userTasks = activeTasksList.filter(t => (t.assigned_to || 'بدون مسئول') === username);
+            userTasks.forEach(t => {
+                let sText = t.status === 'todo' ? 'برای انجام' : (t.status === 'done' || t.status === 'انجام شده' ? 'پایان یافته' : 'در جریان');
+                let sColor = t.status === 'todo' ? 'text-sky-600 bg-sky-50' : (sText === 'پایان یافته' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50');
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 cursor-pointer transition border-b border-slate-50" onclick="openTaskModal('${t.id}')"><td class="p-4 font-black text-slate-700 text-xs truncate max-w-[200px]">${t.title}</td><td class="p-4 text-center"><span class="px-3 py-1.5 rounded-lg text-[10px] font-black ${sColor}">${sText}</span></td><td class="p-4 text-center text-xs font-black text-slate-500">${t.progress || 0}%</td><td class="p-4 text-center text-xs font-black ${isOverdue(t.due_date) && sText !== 'پایان یافته' ? 'text-rose-500' : 'text-slate-400'}" dir="ltr">${normalizeJalaliDate(t.due_date) || '-'}</td></tr>`;
+            });
+            section.classList.remove('hidden'); section.classList.add('flex'); setTimeout(() => { section.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100);
         }
 
+        function renderAnalytics() {
+            if (chartInstances['status']) chartInstances['status'].destroy(); if (chartInstances['workload']) chartInstances['workload'].destroy();
+            let sTodo=0, sIp=0, sDone=0; activeTasksList.forEach(t => { if(t.status === 'todo') sTodo++; else if(t.status === 'done' || t.status === 'انجام شده') sDone++; else sIp++; });
+            chartInstances['status'] = new Chart(document.getElementById('statusChart').getContext('2d'), { type: 'doughnut', data: { labels: ['برای انجام', 'در جریان', 'پایان یافته'], datasets: [{ data: [sTodo, sIp, sDone], backgroundColor: ['#0ea5e9', '#f59e0b', '#10b981'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Vazirmatn', weight: 'bold' }, padding: 20 } } } } });
+            let users = {}; activeTasksList.forEach(t => { let u = (t.assigned_to || 'آزاد').split(' ')[0]; users[u] = (users[u] || 0) + 1; });
+            chartInstances['workload'] = new Chart(document.getElementById('workloadChart').getContext('2d'), { type: 'bar', data: { labels: Object.keys(users), datasets: [{ label: 'تعداد وظایف', data: Object.values(users), backgroundColor: '#0d9488', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { dash: [4, 4] } }, x: { grid: { display: false }, ticks: { font: { family: 'Vazirmatn', size: 10, weight: 'bold' } } } } } });
+        }
+
+        // Meetings
+        async function fetchMeetings() { if(!supaClient) return; try { const { data } = await supaClient.from('meetings').select('*').order('meeting_date', { ascending: true }); meetingsList = data || []; renderMeetings(); } catch(e) {} }
         async function submitMeeting() {
-            const newM = {
-                title: document.getElementById('meetingTitle').value,
-                meeting_date: normalizeJalaliDate(document.getElementById('meetingDate').value),
-                meeting_time: document.getElementById('meetingTime').value,
-                location: document.getElementById('meetingLocation').value,
-                recurring_type: document.getElementById('meetingRecurring').value
-            };
+            const newM = { title: document.getElementById('meetingTitle').value, meeting_date: normalizeJalaliDate(document.getElementById('meetingDate').value), meeting_time: document.getElementById('meetingTime').value, location: document.getElementById('meetingLocation').value, recurring_type: document.getElementById('meetingRecurring').value };
             const btn = document.getElementById('btn-submit-meeting'); btn.disabled = true;
-            try {
-                await supaClient.from('meetings').insert([newM]);
-                showToast('جلسه در تقویم ثبت شد', 'success');
-                document.getElementById('meetingForm').reset();
-                await fetchMeetings();
-            } catch(e) { showToast('خطا در ثبت جلسه', 'error'); }
-            finally { btn.disabled = false; }
+            try { await supaClient.from('meetings').insert([newM]); showToast('در تقویم ثبت شد', 'success'); document.getElementById('meetingForm').reset(); await fetchMeetings(); } catch(e) { showToast('خطا در ثبت', 'error'); } finally { btn.disabled = false; }
         }
-
-        function deleteMeeting(id) {
-            if(!isAdmin()) return showToast('دسترسی لغو جلسه ندارید', 'error');
-            showConfirm('لغو جلسه', 'آیا از لغو و حذف این جلسه مطمئن هستید؟', async () => {
-                try {
-                    await supaClient.from('meetings').delete().eq('id', id); 
-                    await fetchMeetings();
-                    showToast('جلسه با موفقیت لغو شد', 'info');
-                } catch(e) { showToast('خطا در حذف جلسه', 'error'); }
-            });
-        }
-
+        function deleteMeeting(id) { if(!isAdmin()) return showToast('دسترسی لغو جلسه ندارید', 'error'); showConfirm('لغو جلسه', 'آیا از لغو این جلسه مطمئن هستید؟', async () => { try { await supaClient.from('meetings').delete().eq('id', id); await fetchMeetings(); showToast('لغو شد', 'info'); } catch(e) { showToast('خطا', 'error'); } }); }
         function renderMeetings() {
             const container = document.getElementById('meetings-list-container'); container.innerHTML = '';
-            if(meetingsList.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 py-6 text-sm font-bold">جلسه‌ای یافت نشد.</div>'; return; }
-
+            if(meetingsList.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 py-10 font-bold"><i class="fa-regular fa-calendar-xmark text-4xl mb-3 block"></i> جلسه‌ای ثبت نشده است</div>'; return; }
             meetingsList.forEach(m => {
-                let recBadge = '';
-                if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-100 text-indigo-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار هفتگی</span>';
-                if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-100 text-fuchsia-700 text-[9px] px-2 py-0.5 rounded ml-2 font-black">تکرار ماهانه</span>';
-
-                let dateDisp = { day: '-', month: '-' };
-                if(m.meeting_date) {
-                    let p = m.meeting_date.split('/');
-                    if(p.length===3) dateDisp = { day: parseInt(p[2]), month: monthNames[parseInt(p[1])-1]||'' };
-                }
-
-                container.innerHTML += `
-                <div class="flex items-stretch gap-3 sm:gap-4 group animate-fade-up">
-                    <div class="w-14 sm:w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-800 shrink-0 py-2 shadow-sm">
-                        <span class="text-[10px] font-bold">${dateDisp.month}</span>
-                        <span class="text-sm sm:text-base font-black mt-1" dir="ltr">${dateDisp.day}</span>
-                    </div>
-                    <div class="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-3 sm:p-4 group-hover:border-teal-300 transition shadow-sm relative">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-black text-slate-800 text-xs sm:text-sm flex items-center">${recBadge} ${m.title}</h4>
-                            ${isAdmin() ? `<button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
-                        </div>
-                        <div class="flex flex-wrap gap-2 sm:gap-4 text-[9px] sm:text-[10px] font-bold text-slate-500 mt-2">
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-600"></i> ${m.meeting_time}</span>
-                            <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-500"></i> ${m.location || '-'}</span>
-                        </div>
-                    </div>
-                </div>`;
+                let recBadge = ''; if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[9px] px-2 py-1 rounded-md ml-2 font-black">هفتگی</span>'; if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 text-[9px] px-2 py-1 rounded-md ml-2 font-black">ماهانه</span>';
+                let dateDisp = { day: '-', month: '-' }; if(m.meeting_date) { let p = m.meeting_date.split('/'); if(p.length===3) dateDisp = { day: parseInt(p[2]), month: monthNames[parseInt(p[1])-1]||'' }; }
+                container.innerHTML += `<div class="flex items-stretch gap-4 group"><div class="w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-700 shrink-0 py-2 shadow-sm transition hover:bg-teal-500 hover:text-white"><span class="text-[10px] font-bold">${dateDisp.month}</span><span class="text-xl font-black mt-0.5" dir="ltr">${dateDisp.day}</span></div><div class="flex-1 bg-white border-2 border-slate-50 rounded-2xl p-4 group-hover:border-teal-200 transition shadow-sm relative"><div class="flex justify-between items-start mb-3"><h4 class="font-black text-slate-800 text-sm flex items-center">${recBadge} ${m.title}</h4>${isAdmin() ? `<button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>` : ''}</div><div class="flex flex-wrap gap-4 text-[10px] font-bold text-slate-500"><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-500"></i> ${m.meeting_time}</span><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-400"></i> ${m.location || 'مشخص نشده'}</span></div></div></div>`;
             });
         }
     </script>
