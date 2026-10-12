@@ -21,9 +21,6 @@
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Mobile Drag and Drop Polyfill -->
-    <script src="https://unpkg.com/drag-drop-touch"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;700;900&display=swap');
         
@@ -63,19 +60,18 @@
         /* Bottom Nav Item (Mobile) */
         .bottom-nav-item { transition: all 0.2s ease; color: #94a3b8; }
         .bottom-nav-item.active { color: var(--primary); transform: translateY(-3px); }
-        .bottom-nav-item.active .nav-icon-bg { background-color: #f0fdfa; border-radius: 12px; padding: 6px 16px; }
-
-        /* Mobile Kanban Tab Switcher */
-        .k-tab { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .k-tab.active { background-color: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-weight: 900; }
 
         /* Kanban Physics */
-        .kanban-col { min-height: 200px; transition: all 0.2s ease; }
+        .kanban-col { min-height: 150px; transition: all 0.2s ease; }
         .kanban-col.drag-over { background-color: #f0fdfa; border: 2px dashed #0d9488; border-radius: 1rem; }
         .task-card { transition: transform 0.2s, box-shadow 0.2s; border-right: 4px solid transparent; }
-        .task-card.draggable { cursor: grab; touch-action: pan-y; } 
-        .task-card.draggable:active { cursor: grabbing; }
-        .task-card.dragging { opacity: 0.6; transform: scale(0.96) rotate(1deg); z-index: 50; box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-right-color: var(--primary); }
+        
+        /* Drag UI only for desktop */
+        @media (min-width: 1024px) {
+            .task-card.draggable { cursor: grab; } 
+            .task-card.draggable:active { cursor: grabbing; }
+            .task-card.dragging { opacity: 0.6; transform: scale(0.96) rotate(1deg); z-index: 50; box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-right-color: var(--primary); }
+        }
         
         /* Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
@@ -84,11 +80,12 @@
         
         jdp-container { z-index: 9999 !important; font-family: 'Vazirmatn', sans-serif !important; border-radius: 1.5rem !important; border: none !important; box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; }
 
-        .cal-cell { transition: all 0.2s; min-height: 110px; }
+        .cal-cell { transition: all 0.2s; min-height: 70px; }
+        @media (min-width: 1024px) { .cal-cell { min-height: 110px; } }
         .cal-cell:hover { background-color: #f8fafc; cursor: pointer; }
         .cal-cell.today { background-color: #f0fdfa; border: 2px solid #14b8a6; }
         
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 1rem) + 5rem); } /* Extra padding for bottom nav */
         .pt-safe { padding-top: env(safe-area-inset-top, 1rem); }
     </style>
 </head>
@@ -145,7 +142,7 @@
         <!-- Sidebar Overlay for Mobile -->
         <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden lg:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
 
-        <!-- Sidebar (Desktop & Mobile Drawer) -->
+        <!-- Sidebar (Desktop) -->
         <aside id="mainSidebar" class="fixed inset-y-0 right-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transition-transform duration-300 transform translate-x-full lg:relative lg:translate-x-0 lg:z-20 border-l lg:border-none border-slate-800">
             <div class="p-8 border-b border-slate-800 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
@@ -194,7 +191,7 @@
                 </button>
             </nav>
             
-            <div class="p-6 border-t border-slate-800 bg-slate-900/50 pb-safe">
+            <div class="p-6 border-t border-slate-800 bg-slate-900/50 pb-safe lg:pb-6">
                 <div class="bg-slate-800 rounded-2xl p-3 flex items-center gap-3 border border-slate-700">
                     <div class="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center text-white font-black shadow-inner" id="user-avatar-initial">ق</div>
                     <div class="flex-1 min-w-0">
@@ -246,10 +243,11 @@
                 </div>
             </header>
 
-            <!-- Views Container (Added pb-32 for Mobile Bottom Nav clearance) -->
-            <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-32 lg:pb-8 relative custom-scrollbar">
+            <!-- The key fix for mobile overlapping: Let the main container scroll and add massive padding-bottom (.pb-safe) -->
+            <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 pb-safe lg:pb-8 relative custom-scrollbar" id="main-scroll-area">
                 
-                <div id="view-kanban" class="block h-full animate-fade-up">
+                <!-- VIEW: Kanban -->
+                <div id="view-kanban" class="block min-h-full animate-fade-up">
                     
                     <!-- Search Mobile -->
                     <div class="lg:hidden relative w-full mb-4">
@@ -291,7 +289,7 @@
                     </div>
 
                     <!-- Kanban Grid -->
-                    <div class="flex flex-col lg:flex-row gap-6 h-full min-h-[50vh]">
+                    <div class="flex flex-col lg:flex-row gap-6 min-h-[50vh]">
                         
                         <!-- Col: To Do -->
                         <div id="wrapper-todo" class="w-full lg:w-1/3 flex flex-col bg-slate-100/50 lg:bg-transparent rounded-3xl lg:rounded-none">
@@ -299,7 +297,7 @@
                                 <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-500 shadow-inner"></span> برای انجام</h3>
                                 <span class="bg-sky-50 text-sky-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-todo">0</span>
                             </div>
-                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar pb-4" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo"></div>
+                            <div class="p-2 lg:p-0 flex-1 space-y-3 kanban-col custom-scrollbar pb-4" id="col-todo" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="todo"></div>
                         </div>
 
                         <!-- Col: In Progress -->
@@ -308,7 +306,7 @@
                                 <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500 shadow-inner animate-pulse"></span> در دست اقدام</h3>
                                 <span class="bg-amber-50 text-amber-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-inprogress">0</span>
                             </div>
-                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar pb-4" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress"></div>
+                            <div class="p-2 lg:p-0 flex-1 space-y-3 kanban-col custom-scrollbar pb-4" id="col-inprogress" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="in_progress"></div>
                         </div>
 
                         <!-- Col: Done -->
@@ -317,23 +315,24 @@
                                 <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 shadow-inner"></span> انجام شده</h3>
                                 <span class="bg-emerald-50 text-emerald-600 text-xs font-black px-2.5 py-1 rounded-lg" id="badge-done">0</span>
                             </div>
-                            <div class="p-2 lg:p-0 flex-1 overflow-y-auto space-y-3 kanban-col custom-scrollbar pb-4" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done"></div>
+                            <div class="p-2 lg:p-0 flex-1 space-y-3 kanban-col custom-scrollbar pb-4" id="col-done" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" data-status="done"></div>
                         </div>
 
                     </div>
                 </div>
 
-                <div id="view-performance" class="hidden h-full animate-fade-up flex-col">
+                <!-- VIEW: Performance -->
+                <div id="view-performance" class="hidden min-h-full animate-fade-up flex-col">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" id="team-cards-container"></div>
                     
-                    <div id="member-detail-section" class="mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 lg:p-6 hidden animate-fade-up flex-col max-h-[60vh] lg:max-h-[50vh]">
+                    <div id="member-detail-section" class="mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 lg:p-6 hidden animate-fade-up flex-col">
                         <div class="flex justify-between items-center mb-4 lg:mb-6 border-b border-slate-100 pb-4 shrink-0">
                             <h3 class="font-black text-slate-800 text-sm lg:text-lg" id="detail-member-name">وظایف کاربر</h3>
                             <button onclick="document.getElementById('member-detail-section').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 bg-slate-50 p-2 rounded-xl"><i class="fa-solid fa-xmark text-lg"></i></button>
                         </div>
                         
                         <!-- Desktop Table -->
-                        <div class="hidden lg:block flex-1 overflow-auto custom-scrollbar">
+                        <div class="hidden lg:block w-full">
                             <table class="w-full text-right text-sm whitespace-nowrap">
                                 <thead class="text-slate-500 bg-slate-50 sticky top-0 z-10">
                                     <tr>
@@ -348,11 +347,12 @@
                         </div>
 
                         <!-- Mobile Cards -->
-                        <div class="lg:hidden flex-1 overflow-auto custom-scrollbar space-y-3 pr-1" id="detail-member-mob"></div>
+                        <div class="lg:hidden w-full space-y-3 pr-1" id="detail-member-mob"></div>
                     </div>
                 </div>
 
-                <div id="view-calendar" class="hidden h-full animate-fade-up">
+                <!-- VIEW: Calendar (Meetings) -->
+                <div id="view-calendar" class="hidden min-h-full animate-fade-up">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                         <div class="lg:col-span-1 bg-white rounded-3xl border border-slate-100 shadow-sm p-5 lg:p-6 h-fit shrink-0">
                             <h3 class="font-black text-slate-800 mb-6 border-b border-slate-100 pb-4 text-base lg:text-lg"><i class="fa-regular fa-calendar-plus text-teal-500 ml-2"></i> زمان‌بندی جلسه</h3>
@@ -387,16 +387,17 @@
                             </form>
                         </div>
 
-                        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col overflow-hidden h-[400px] lg:h-full lg:max-h-[80vh]">
+                        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col h-auto">
                             <div class="p-5 lg:p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 shrink-0">
                                 <h3 class="font-black text-slate-800 text-sm lg:text-lg">جلسات برنامه‌ریزی شده</h3>
                             </div>
-                            <div class="flex-1 p-4 lg:p-6 overflow-y-auto space-y-4 custom-scrollbar" id="meetings-list-container"></div>
+                            <div class="p-4 lg:p-6 space-y-4" id="meetings-list-container"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-taskcalendar" class="hidden h-full animate-fade-up flex-col gap-4">
+                <!-- VIEW: Task Calendar -->
+                <div id="view-taskcalendar" class="hidden min-h-full animate-fade-up flex-col gap-4">
                     <div class="bg-white border border-slate-100 p-3 lg:p-4 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 shrink-0">
                         <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl w-full md:w-auto justify-center">
                             <button onclick="setCalView('month')" id="cal-btn-month" class="px-5 py-2 text-xs font-black rounded-xl transition bg-white shadow-sm text-teal-700 flex-1 md:flex-none">نمای ماهانه</button>
@@ -404,32 +405,31 @@
                         </div>
                         <div class="flex items-center justify-between w-full md:w-auto gap-4 lg:gap-6">
                             <button onclick="changeCalDate(-1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 rounded-xl hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-right"></i></button>
-                            <h3 id="cal-header-title" class="font-black text-slate-800 text-base lg:text-lg min-w-[120px] text-center">آبان 1403</h3>
+                            <h3 id="cal-header-title" class="font-black text-slate-800 text-sm lg:text-lg min-w-[100px] lg:min-w-[120px] text-center">آبان 1403</h3>
                             <button onclick="changeCalDate(1)" class="w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 rounded-xl hover:bg-slate-100 transition"><i class="fa-solid fa-chevron-left"></i></button>
                         </div>
                         <button onclick="resetCalToToday()" class="w-full md:w-auto px-6 py-2.5 text-xs font-black bg-teal-50 text-teal-700 rounded-xl hover:bg-teal-100 transition">برو به امروز</button>
                     </div>
                     
                     <div class="bg-white border border-slate-100 rounded-3xl shadow-sm flex-1 overflow-hidden flex flex-col">
-                        <div class="flex-1 overflow-auto custom-scrollbar">
-                            <div class="min-w-[700px] flex flex-col h-full">
-                                <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/80 shrink-0">
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">شنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">یک‌شنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">دوشنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">سه‌شنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">چهارشنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-slate-500 text-xs">پنج‌شنبه</div>
-                                    <div class="py-3 lg:py-4 text-center font-black text-rose-500 text-xs">جمعه</div>
-                                </div>
-                                <div id="cal-grid" class="flex-1 grid grid-cols-7 bg-slate-100 gap-[1px]"></div>
+                        <div class="w-full flex flex-col h-full">
+                            <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/80 shrink-0">
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">ش<span class="hidden sm:inline">نبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">ی<span class="hidden sm:inline">ک‌شنبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">د<span class="hidden sm:inline">وشنبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">س<span class="hidden sm:inline">ه‌شنبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">چ<span class="hidden sm:inline">هارشنبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-slate-500 text-[10px] sm:text-xs">پ<span class="hidden sm:inline">نج‌شنبه</span></div>
+                                <div class="py-2 lg:py-4 text-center font-black text-rose-500 text-[10px] sm:text-xs">ج<span class="hidden sm:inline">معه</span></div>
                             </div>
+                            <div id="cal-grid" class="flex-1 grid grid-cols-7 bg-slate-100 gap-[1px]"></div>
                         </div>
                     </div>
                 </div>
                 
-                <div id="view-tracking" class="hidden h-full animate-fade-up flex-col gap-6">
-                    <div class="bg-white rounded-3xl border border-indigo-100 shadow-sm flex-1 overflow-hidden flex flex-col">
+                <!-- VIEW: Tracking -->
+                <div id="view-tracking" class="hidden min-h-full animate-fade-up flex-col gap-6">
+                    <div class="bg-white rounded-3xl border border-indigo-100 shadow-sm flex flex-col w-full h-auto">
                         <div class="p-5 lg:p-6 border-b border-indigo-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 bg-indigo-50/30">
                             <div>
                                 <h3 class="font-black text-indigo-900 text-base lg:text-lg"><i class="fa-solid fa-network-wired ml-2 text-indigo-500"></i> وضعیت ارجاعات من</h3>
@@ -438,7 +438,7 @@
                         </div>
                         
                         <!-- Desktop Table -->
-                        <div class="hidden lg:block flex-1 overflow-auto p-4 custom-scrollbar">
+                        <div class="hidden lg:block w-full p-4">
                             <table class="w-full text-right text-sm whitespace-nowrap">
                                 <thead class="text-slate-500 bg-slate-50 rounded-xl">
                                     <tr>
@@ -454,38 +454,40 @@
                         </div>
 
                         <!-- Mobile Cards -->
-                        <div class="lg:hidden flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50" id="tracking-mob-container"></div>
+                        <div class="lg:hidden w-full p-4 space-y-3 bg-slate-50" id="tracking-mob-container"></div>
                     </div>
                 </div>
 
-                <div id="view-analytics" class="hidden h-full animate-fade-up">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 h-full">
+                <!-- VIEW: Analytics -->
+                <div id="view-analytics" class="hidden min-h-full animate-fade-up">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 lg:p-6 flex flex-col">
                             <h3 class="font-black text-slate-800 mb-4 lg:mb-6 text-sm lg:text-lg border-b border-slate-50 pb-3 lg:pb-4">وضعیت کلی پروژه‌ها</h3>
-                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[250px] lg:min-h-[300px]">
+                            <div class="relative w-full flex items-center justify-center min-h-[250px] lg:min-h-[300px]">
                                 <canvas id="statusChart"></canvas>
                             </div>
                         </div>
                         <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 lg:p-6 flex flex-col">
                             <h3 class="font-black text-slate-800 mb-4 lg:mb-6 text-sm lg:text-lg border-b border-slate-50 pb-3 lg:pb-4">حجم کاری اعضا</h3>
-                            <div class="flex-1 relative w-full flex items-center justify-center min-h-[250px] lg:min-h-[300px]">
+                            <div class="relative w-full flex items-center justify-center min-h-[250px] lg:min-h-[300px]">
                                 <canvas id="workloadChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-archive" class="hidden h-full animate-fade-up flex-col gap-4 lg:gap-6">
-                    <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
+                <!-- VIEW: Archive / Admin -->
+                <div id="view-archive" class="hidden min-h-full animate-fade-up flex-col gap-4 lg:gap-6">
+                    <div class="bg-white rounded-3xl border border-amber-200 shadow-sm flex flex-col w-full h-auto">
                         <div class="p-4 lg:p-6 border-b border-amber-100 flex justify-between items-center bg-amber-50/50 shrink-0">
                             <div>
                                 <h3 class="font-black text-amber-800 text-sm lg:text-lg"><i class="fa-solid fa-clipboard-check ml-2 text-amber-500"></i> کارتابل تاییدات مدیریت</h3>
                             </div>
                         </div>
                         <!-- Desktop Table -->
-                        <div class="hidden lg:block flex-1 overflow-auto custom-scrollbar p-4">
+                        <div class="hidden lg:block w-full p-4">
                             <table class="w-full text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-50 sticky top-0">
+                                <thead class="text-slate-500 bg-slate-50">
                                     <tr>
                                         <th class="p-4 font-black rounded-r-xl">عنوان درخواست</th>
                                         <th class="p-4 font-black text-center">ثبت کننده</th>
@@ -497,19 +499,19 @@
                             </table>
                         </div>
                         <!-- Mobile Cards -->
-                        <div class="lg:hidden flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50" id="pending-mob-container"></div>
+                        <div class="lg:hidden w-full p-4 space-y-3 bg-slate-50" id="pending-mob-container"></div>
                     </div>
 
-                    <div class="bg-white rounded-3xl border border-rose-200 shadow-sm flex-1 overflow-hidden flex flex-col max-h-[50%]">
+                    <div class="bg-white rounded-3xl border border-rose-200 shadow-sm flex flex-col w-full h-auto">
                         <div class="p-4 lg:p-6 border-b border-rose-100 flex justify-between items-center bg-rose-50/50 shrink-0">
                             <div>
                                 <h3 class="font-black text-rose-800 text-sm lg:text-lg"><i class="fa-solid fa-trash-can-arrow-up ml-2 text-rose-500"></i> زباله‌دان و حذف نهایی</h3>
                             </div>
                         </div>
                         <!-- Desktop Table -->
-                        <div class="hidden lg:block flex-1 overflow-auto custom-scrollbar p-4">
+                        <div class="hidden lg:block w-full p-4">
                             <table class="w-full text-right text-sm whitespace-nowrap">
-                                <thead class="text-slate-500 bg-slate-50 sticky top-0">
+                                <thead class="text-slate-500 bg-slate-50">
                                     <tr>
                                         <th class="p-4 font-black rounded-r-xl">عنوان کار حذف شده</th>
                                         <th class="p-4 font-black text-center">مسئول</th>
@@ -521,7 +523,7 @@
                             </table>
                         </div>
                         <!-- Mobile Cards -->
-                        <div class="lg:hidden flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50" id="archive-mob-container"></div>
+                        <div class="lg:hidden w-full p-4 space-y-3 bg-slate-50" id="archive-mob-container"></div>
                     </div>
                 </div>
 
@@ -538,7 +540,7 @@
                 <span class="text-[9px] font-black">تقویم</span>
             </button>
             
-            <!-- Center Floating Action Button (FAB) -->
+            <!-- Center FAB -->
             <div class="relative -top-6 flex flex-col items-center">
                 <button onclick="openTaskModal()" class="w-14 h-14 bg-teal-500 text-white rounded-full shadow-lg shadow-teal-300 flex items-center justify-center text-2xl transform transition hover:scale-105 active:scale-95 border-4 border-white">
                     <i class="fa-solid fa-plus"></i>
@@ -582,7 +584,7 @@
                         
                         <div>
                             <label class="block text-xs font-black text-slate-700 mb-2">شرح وظیفه و خروجی مورد انتظار</label>
-                            <textarea id="taskDesc" rows="3" sm:rows="4" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs sm:text-sm font-medium bg-slate-50 transition leading-relaxed"></textarea>
+                            <textarea id="taskDesc" rows="3" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs sm:text-sm font-medium bg-slate-50 transition leading-relaxed"></textarea>
                         </div>
 
                         <div>
@@ -604,17 +606,17 @@
                         <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label class="block text-xs font-black text-slate-700 mb-2">شخص مسئول</label>
-                                <select id="taskAssignee" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                                <select id="taskAssignee" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-[11px] sm:text-xs font-bold bg-slate-50">
                                     <option value="تخصیص نیافته">آزاد (بدون مسئول)</option>
-                                    <option value="محمدحسین اوصالی (مدیر)">محمدحسین اوصالی (مدیر)</option>
-                                    <option value="علیرضا عباسپور (مدیر)">علیرضا عباسپور (مدیر)</option>
+                                    <option value="محمدحسین اوصالی (مدیر)">محمدحسین اوصالی</option>
+                                    <option value="علیرضا عباسپور (مدیر)">علیرضا عباسپور</option>
                                     <option value="علیرضا عمیق">علیرضا عمیق</option>
-                                    <option value="سید محمد حسین موسویان">سید محمد حسین موسویان</option>
+                                    <option value="سید محمد حسین موسویان">حسین موسویان</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-slate-700 mb-2">وضعیت در بورد</label>
-                                <select id="taskStatusHidden" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50 text-indigo-700">
+                                <select id="taskStatusHidden" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-[11px] sm:text-xs font-bold bg-slate-50 text-indigo-700">
                                     <option value="todo">برای انجام</option>
                                     <option value="in_progress">در دست اقدام</option>
                                     <option value="done">پایان یافته</option>
@@ -632,7 +634,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-black text-slate-700 mb-2">اولویت</label>
-                                <select id="taskPriority" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                                <select id="taskPriority" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-[11px] sm:text-xs font-bold bg-slate-50">
                                     <option value="عادی">🟢 عادی</option>
                                     <option value="مهم">🟠 مهم</option>
                                     <option value="فوری">🔴 فوری</option>
@@ -642,7 +644,7 @@
                         
                         <div>
                             <label class="block text-xs font-black text-slate-700 mb-2">دسته‌بندی</label>
-                            <select id="taskCategory" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-xs font-bold bg-slate-50">
+                            <select id="taskCategory" class="w-full border-2 border-slate-100 rounded-2xl p-3 sm:p-3.5 focus:border-teal-500 outline-none text-[11px] sm:text-xs font-bold bg-slate-50">
                                 <option value="مالی و حسابداری">مالی و حسابداری</option>
                                 <option value="سیستم و فنی">سیستم و فنی</option>
                                 <option value="پشتیبانی اعضا">پشتیبانی اعضا</option>
@@ -653,7 +655,7 @@
                 </div>
             </form>
             
-            <div class="p-5 sm:p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row justify-end gap-3 shrink-0 pb-safe">
+            <div class="p-5 sm:p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row justify-end gap-3 shrink-0 pb-safe sm:pb-6">
                 <button type="button" onclick="closeTaskModal()" class="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-xl font-black text-slate-500 bg-slate-50 hover:bg-slate-100 transition text-sm order-2 sm:order-1">انصراف</button>
                 <button type="submit" form="taskForm" id="btn-submit-task" class="w-full sm:w-auto px-8 py-3.5 sm:py-4 rounded-xl font-black text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-teal-200 transition text-sm flex items-center justify-center gap-2 order-1 sm:order-2">
                     <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btn-submit-text">ثبت نهایی</span>
@@ -1034,17 +1036,20 @@
 
                 let isPending = (task.is_approved === false || task.is_approved === 'false');
                 let isReadOnly = !isAdmin() && (task.assigned_to !== getCurrentUserName() || isPending); 
-                let dragClass = isReadOnly ? '' : 'draggable'; let draggable = !isReadOnly;
+                
+                // Allow tapping card to open modal on mobile instead of dragging
+                let dragClass = isReadOnly ? '' : 'draggable';
+                let draggableAttr = (!isReadOnly && window.innerWidth >= 1024) ? 'true' : 'false';
 
                 let actionButtonsHTML = !isReadOnly ? `
                     <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
-                        <button onclick="openTaskModal('${task.id}')" class="text-indigo-500 hover:bg-indigo-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="ویرایش"><i class="fa-solid fa-pen text-[11px]"></i></button>
-                        <button onclick="softDeleteTask('${task.id}')" class="text-rose-500 hover:bg-rose-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="حذف"><i class="fa-solid fa-trash text-[11px]"></i></button>
+                        <button onclick="event.stopPropagation(); openTaskModal('${task.id}')" class="text-indigo-500 hover:bg-indigo-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="ویرایش"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                        <button onclick="event.stopPropagation(); softDeleteTask('${task.id}')" class="text-rose-500 hover:bg-rose-100 w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100" title="حذف"><i class="fa-solid fa-trash text-[11px]"></i></button>
                     </div>
                 ` : `<span class="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200"><i class="fa-solid fa-eye ml-1"></i> فقط مشاهده</span>`;
 
                 const cardHTML = `
-                    <div id="${task.id}" class="task-card bg-white p-4 lg:p-5 rounded-[1.25rem] border ${overdueClass ? overdueClass : 'border-slate-100 border-r-4 border-r-slate-300'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggable}" ondragstart="${draggable ? 'drag(event)' : ''}" onclick="${draggable && window.innerWidth < 1024 ? `openTaskModal('${task.id}')` : ''}">
+                    <div id="${task.id}" class="task-card bg-white p-4 lg:p-5 rounded-[1.25rem] border ${overdueClass ? overdueClass : 'border-slate-100 border-r-4 border-r-slate-300'} shadow-sm hover:shadow-md relative group ${dragClass}" draggable="${draggableAttr}" ondragstart="${draggableAttr === 'true' ? 'drag(event)' : ''}" onclick="${!isReadOnly ? `openTaskModal('${task.id}')` : ''}">
                         ${isPending ? `<div class="bg-amber-50 text-amber-700 text-[10px] font-black px-2 py-1.5 mb-3 rounded-lg border border-amber-200 flex items-center justify-center gap-1"><i class="fa-solid fa-hourglass-half animate-pulse"></i> نیازمند تایید مدیر</div>` : ''}
                         <div class="flex justify-between items-start mb-3 gap-2">
                             <span class="text-[10px] shrink-0 font-black px-2 py-1 rounded-md border ${pConfig.bg} flex items-center gap-1"><i class="fa-solid ${pConfig.icon}"></i> ${task.priority || 'عادی'}</span>
@@ -1127,7 +1132,7 @@
             const assignee = document.getElementById('taskAssignee').value;
             const myName = getCurrentUserName();
             
-            let isApproved = true; let successMessage = 'وظیفه با موفقیت روی بورد قرار گرفت';
+            let isApproved = true; let successMessage = 'تغییرات با موفقیت ثبت شد';
             if (!isAdmin() && assignee !== myName) { isApproved = false; successMessage = 'ارجاع کار ثبت شد و منتظر تایید مدیر است'; }
 
             const taskData = {
@@ -1192,6 +1197,7 @@
             renderCalendarView();
         }
         function resetCalToToday() { const t = JalaliUtils.getToday(); calState.year = t.y; calState.month = t.m; calState.day = t.d; renderCalendarView(); }
+        
         function renderCalendarView() {
             document.getElementById('cal-header-title').innerText = `${monthNames[calState.month - 1]} ${calState.year}`;
             const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
@@ -1199,7 +1205,7 @@
             let firstDayGregorian = JalaliUtils.toGregorian(calState.year, calState.month, 1);
             let startWeekDay = (firstDayGregorian.getDay() + 1) % 7;
             let cells = [];
-            for (let i = 0; i < startWeekDay; i++) cells.push(`<div class="bg-slate-50/50 min-h-[110px] border-b border-l border-slate-100"></div>`);
+            for (let i = 0; i < startWeekDay; i++) cells.push(`<div class="bg-slate-50/50 min-h-[70px] border-b border-l border-slate-100"></div>`);
             const todayStr = getTodayJalaliStr();
 
             for (let d = 1; d <= daysInMonth; d++) {
@@ -1207,23 +1213,27 @@
                 let isToday = cellDateStr === todayStr; let dayTasks = activeTasksList.filter(t => normalizeJalaliDate(t.due_date) === cellDateStr); let tasksHtml = '';
                 
                 dayTasks.forEach(t => {
-                    let s = t.status; let color = 'bg-slate-100 text-slate-700';
-                    if (s === 'done' || s === 'انجام شده') color = 'bg-emerald-100 text-emerald-700';
-                    else if (isOverdue(cellDateStr)) color = 'bg-rose-100 text-rose-700 animate-pulse';
-                    else if (s === 'in_progress' || s === 'در دست اقدام') color = 'bg-amber-100 text-amber-700';
-                    else if (t.priority === 'فوری') color = 'bg-rose-100 text-rose-700 border-rose-200 border';
+                    let s = t.status; let color = 'bg-slate-200 text-slate-700';
+                    if (s === 'done' || s === 'انجام شده') color = 'bg-emerald-200 text-emerald-800';
+                    else if (isOverdue(cellDateStr)) color = 'bg-rose-200 text-rose-800 animate-pulse';
+                    else if (s === 'in_progress' || s === 'در دست اقدام') color = 'bg-amber-200 text-amber-800';
+                    else if (t.priority === 'فوری') color = 'bg-rose-200 text-rose-800 border-rose-300 border';
                     let icon = s === 'done' || s === 'انجام شده' ? 'fa-check' : (isOverdue(cellDateStr) ? 'fa-triangle-exclamation' : 'fa-circle-dot');
-                    tasksHtml += `<div onclick="event.stopPropagation(); openTaskModal('${t.id}')" class="text-[9px] font-black p-1.5 rounded-lg mb-1 truncate ${color} shadow-sm transition hover:scale-[1.02]" title="${t.title}"><i class="fa-solid ${icon} mr-0.5"></i> ${t.title}</div>`;
+                    // Mobile shows dot, Desktop shows full badge
+                    tasksHtml += `
+                        <div onclick="event.stopPropagation(); openTaskModal('${t.id}')" class="text-[9px] font-black p-0.5 sm:p-1.5 rounded-full sm:rounded-lg mb-0.5 sm:mb-1 truncate ${color} shadow-sm transition hover:scale-[1.02] flex justify-center sm:justify-start" title="${t.title}">
+                            <i class="fa-solid ${icon} sm:mr-0.5 text-[8px] sm:text-[10px]"></i> <span class="hidden sm:inline">${t.title}</span>
+                        </div>`;
                 });
 
                 cells.push(`
-                    <div onclick="openTaskModal(null, '${cellDateStr}')" class="cal-cell bg-white border-b border-l border-slate-100 p-1.5 flex flex-col relative group ${isToday ? 'today rounded-xl m-1 shadow-sm' : ''}">
-                        <div class="text-xs font-black text-slate-500 mb-2 w-6 h-6 flex items-center justify-center rounded-full group-hover:bg-teal-50 group-hover:text-teal-600 transition ${isToday ? 'bg-teal-500 text-white' : ''}">${d}</div>
-                        <div class="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">${tasksHtml}</div>
+                    <div onclick="openTaskModal(null, '${cellDateStr}')" class="cal-cell bg-white border-b border-l border-slate-100 p-1 flex flex-col relative group ${isToday ? 'today rounded-xl m-1 shadow-sm' : ''}">
+                        <div class="text-[10px] sm:text-xs font-black text-slate-500 mb-1 sm:mb-2 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full group-hover:bg-teal-50 group-hover:text-teal-600 transition ${isToday ? 'bg-teal-500 text-white' : ''}">${d}</div>
+                        <div class="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pr-0 sm:pr-1">${tasksHtml}</div>
                     </div>
                 `);
             }
-            while (cells.length % 7 !== 0) cells.push(`<div class="bg-slate-50/50 min-h-[110px] border-b border-l border-slate-100"></div>`);
+            while (cells.length % 7 !== 0) cells.push(`<div class="bg-slate-50/50 min-h-[70px] border-b border-l border-slate-100"></div>`);
             if(calState.view === 'week') { let targetIndex = startWeekDay + calState.day - 1; let chunkStart = Math.floor(targetIndex / 7) * 7; cells = cells.slice(chunkStart, chunkStart + 7); }
             grid.innerHTML = cells.join('');
         }
@@ -1262,12 +1272,12 @@
                 // Mobile
                 mobContainer.innerHTML += `
                     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm" onclick="openTaskModal('${t.id}')">
-                        <div class="flex justify-between items-start mb-3">
-                            <h4 class="font-black text-slate-800 text-xs">${t.title}</h4>
+                        <div class="flex justify-between items-start mb-3 gap-2">
+                            <h4 class="font-black text-slate-800 text-xs leading-relaxed">${t.title}</h4>
                             ${appBadge}
                         </div>
-                        <div class="flex justify-between items-center text-[10px] mt-2">
-                            <span class="font-bold text-slate-500"><i class="fa-solid fa-user ml-1"></i> ${t.assigned_to || '-'}</span>
+                        <div class="flex justify-between items-center text-[10px] mt-2 border-t border-slate-50 pt-3">
+                            <span class="font-bold text-slate-500"><i class="fa-solid fa-user ml-1 text-slate-300"></i> ${t.assigned_to || '-'}</span>
                             <span class="px-2 py-1.5 rounded-lg font-black ${sColor}">${sText}</span>
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">
@@ -1296,11 +1306,14 @@
                     
                     pMob.innerHTML += `
                         <div class="bg-white p-4 rounded-2xl border border-amber-100 shadow-sm">
-                            <h4 class="font-black text-slate-800 text-xs mb-2">${t.title}</h4>
-                            <p class="text-[10px] text-slate-500 mb-3">ثبت: <span dir="ltr">${t.creator_email}</span> <br> ارجاع به: <span class="font-black text-teal-600">${t.assigned_to}</span></p>
+                            <h4 class="font-black text-slate-800 text-xs mb-3 leading-relaxed">${t.title}</h4>
+                            <div class="bg-amber-50 p-2.5 rounded-xl mb-3">
+                                <p class="text-[10px] text-slate-500 flex justify-between mb-1.5"><span>ثبت:</span> <span dir="ltr" class="font-bold">${t.creator_email}</span></p>
+                                <p class="text-[10px] text-slate-500 flex justify-between"><span>ارجاع به:</span> <span class="font-black text-teal-700">${t.assigned_to}</span></p>
+                            </div>
                             <div class="flex gap-2">
-                                <button onclick="openTaskModal('${t.id}')" class="flex-1 bg-indigo-50 text-indigo-600 px-3 py-2 rounded-xl text-xs font-black">بررسی</button>
-                                <button onclick="approveTask('${t.id}')" class="flex-1 bg-teal-600 text-white px-3 py-2 rounded-xl text-xs font-black shadow-md shadow-teal-200">تایید نهایی</button>
+                                <button onclick="openTaskModal('${t.id}')" class="flex-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-2.5 rounded-xl text-xs font-black transition">بررسی و ویرایش</button>
+                                <button onclick="approveTask('${t.id}')" class="flex-1 bg-teal-600 text-white px-3 py-2.5 rounded-xl text-xs font-black shadow-md shadow-teal-200">تایید نهایی</button>
                             </div>
                         </div>
                     `;
@@ -1321,11 +1334,14 @@
                     
                     aMob.innerHTML += `
                         <div class="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm">
-                            <h4 class="font-black text-slate-800 text-xs mb-2">${t.title}</h4>
-                            <p class="text-[10px] text-slate-500 mb-3">مسئول: ${t.assigned_to || '-'} | تاریخ: <span dir="ltr">${t.created_at ? t.created_at.substring(0,10) : '-'}</span></p>
+                            <h4 class="font-black text-slate-800 text-xs mb-3 leading-relaxed">${t.title}</h4>
+                            <div class="bg-rose-50 p-2.5 rounded-xl mb-3 flex justify-between text-[10px]">
+                                <span class="text-slate-600 font-bold">مسئول: ${t.assigned_to || '-'}</span>
+                                <span dir="ltr" class="text-slate-400">${t.created_at ? t.created_at.substring(0,10) : '-'}</span>
+                            </div>
                             <div class="flex gap-2">
-                                <button onclick="restoreTask('${t.id}')" class="flex-1 bg-teal-50 text-teal-600 px-3 py-2 rounded-xl text-xs font-black">بازگردانی</button>
-                                <button onclick="hardDeleteTask('${t.id}')" class="flex-1 bg-rose-50 text-rose-600 px-3 py-2 rounded-xl text-xs font-black">حذف دائم</button>
+                                <button onclick="restoreTask('${t.id}')" class="flex-1 bg-teal-50 text-teal-600 px-3 py-2.5 rounded-xl text-xs font-black">بازگردانی</button>
+                                <button onclick="hardDeleteTask('${t.id}')" class="flex-1 bg-rose-50 text-rose-600 px-3 py-2.5 rounded-xl text-xs font-black">حذف دائم</button>
                             </div>
                         </div>
                     `;
@@ -1365,10 +1381,10 @@
                 
                 // Mobile
                 mobContainer.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm mb-2" onclick="openTaskModal('${t.id}')">
-                        <h4 class="font-black text-slate-800 text-xs mb-3">${t.title}</h4>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-2" onclick="openTaskModal('${t.id}')">
+                        <h4 class="font-black text-slate-800 text-xs mb-3 leading-relaxed">${t.title}</h4>
                         <div class="flex justify-between items-center text-[9px] font-black">
-                            <span class="px-2 py-1 rounded-md ${sColor}">${sText}</span>
+                            <span class="px-2.5 py-1.5 rounded-lg ${sColor}">${sText}</span>
                             <span class="flex items-center gap-1 ${isOverdue(t.due_date) && sText !== 'پایان یافته' ? 'text-rose-500' : 'text-slate-400'}"><i class="fa-regular fa-calendar"></i> ${normalizeJalaliDate(t.due_date) || 'بدون سررسید'}</span>
                         </div>
                     </div>
@@ -1399,7 +1415,7 @@
             meetingsList.forEach(m => {
                 let recBadge = ''; if(m.recurring_type === 'weekly') recBadge = '<span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[9px] px-2 py-1 rounded-md ml-2 font-black">هفتگی</span>'; if(m.recurring_type === 'monthly') recBadge = '<span class="bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 text-[9px] px-2 py-1 rounded-md ml-2 font-black">ماهانه</span>';
                 let dateDisp = { day: '-', month: '-' }; if(m.meeting_date) { let p = m.meeting_date.split('/'); if(p.length===3) dateDisp = { day: parseInt(p[2]), month: monthNames[parseInt(p[1])-1]||'' }; }
-                container.innerHTML += `<div class="flex items-stretch gap-3 lg:gap-4 group"><div class="w-14 lg:w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-700 shrink-0 py-2 shadow-sm transition hover:bg-teal-500 hover:text-white"><span class="text-[9px] lg:text-[10px] font-bold">${dateDisp.month}</span><span class="text-lg lg:text-xl font-black mt-0.5" dir="ltr">${dateDisp.day}</span></div><div class="flex-1 bg-white border-2 border-slate-50 rounded-2xl p-3 lg:p-4 group-hover:border-teal-200 transition shadow-sm relative"><div class="flex justify-between items-start mb-2 lg:mb-3"><h4 class="font-black text-slate-800 text-xs lg:text-sm flex items-center">${recBadge} ${m.title}</h4>${isAdmin() ? `<button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}</div><div class="flex flex-wrap gap-2 lg:gap-4 text-[9px] lg:text-[10px] font-bold text-slate-500"><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-500"></i> ${m.meeting_time}</span><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-400"></i> ${m.location || 'مشخص نشده'}</span></div></div></div>`;
+                container.innerHTML += `<div class="flex items-stretch gap-3 lg:gap-4 group"><div class="w-14 lg:w-16 flex flex-col items-center justify-center bg-teal-50 rounded-2xl border border-teal-100 text-teal-700 shrink-0 py-2 shadow-sm transition hover:bg-teal-500 hover:text-white"><span class="text-[9px] lg:text-[10px] font-bold">${dateDisp.month}</span><span class="text-lg lg:text-xl font-black mt-0.5" dir="ltr">${dateDisp.day}</span></div><div class="flex-1 bg-white border-2 border-slate-50 rounded-2xl p-3 lg:p-4 group-hover:border-teal-200 transition shadow-sm relative"><div class="flex justify-between items-start mb-2 lg:mb-3"><h4 class="font-black text-slate-800 text-xs lg:text-sm flex items-center leading-relaxed">${recBadge} ${m.title}</h4>${isAdmin() ? `<button onclick="deleteMeeting('${m.id}')" class="text-slate-300 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}</div><div class="flex flex-wrap gap-2 lg:gap-4 text-[9px] lg:text-[10px] font-bold text-slate-500"><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-regular fa-clock ml-1 text-teal-500"></i> ${m.meeting_time}</span><span class="bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100"><i class="fa-solid fa-location-dot ml-1 text-rose-400"></i> ${m.location || 'مشخص نشده'}</span></div></div></div>`;
             });
         }
     </script>
